@@ -107,13 +107,18 @@ const fetchTasks = async () => {
 
   let response = null
   try{
-    response = await fetch(`${backendIp}/getAllTasks`)
+    // response = await fetch(`${backendIp}/getAllTasks`)
+    response = await fetch(`https://burdback.netlify.app/.netlify/functions/api`, {
+      method: 'GET',
+      // mode: 'no-cors'
+    })
   }catch(error) {
     // alert(error)
   }
 
   // tasks.value.completed = await response.json()
   // tasks.value.all = tempTasks.concat(tasks.value.completed)
+
   tasks.value.all = await response.json()
   completingTaskId.value = null
   reopeningTaskId.value = null

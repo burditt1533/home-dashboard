@@ -1,7 +1,7 @@
 <script setup>
   import { defineExpose } from 'vue'
 
-  // https://confetti.js.org/more.html
+  // https://confetti.js.org/more.html0
 
   const defaults = {
     spread: 360,
