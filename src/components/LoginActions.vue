@@ -17,7 +17,7 @@
     }
 
     if(Object.keys(params).length > 0) {
-      // localStorage.setItem('authInfo', JSON.stringify(params))
+      localStorage.setItem('authInfo', JSON.stringify(params))
     }
 
     window.history.pushState({}, document.title, '/')
