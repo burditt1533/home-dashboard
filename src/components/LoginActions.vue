@@ -16,9 +16,13 @@
       params[decodeURIComponent(m[1])] = decodeURIComponent(m[2])
     }
 
+    console.log(params)
+
     if(Object.keys(params).length > 0) {
+      console.log( JSON.stringify(params))
       localStorage.setItem('authInfo', JSON.stringify(params))
     }
+
 
     window.history.pushState({}, document.title, '/')
     settings.setAuthInfo(JSON.parse(localStorage.getItem('authInfo')))
