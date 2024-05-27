@@ -17,7 +17,7 @@
 
     let params = {
       'client_id': '614084643197-jccf8vb9gcf8kfqcthsr8naa71nbjp65.apps.googleusercontent.com',
-      'redirect_uri': 'http://localhost:5173',
+      'redirect_uri': '/',
       'response_type': 'token',
       'scope': 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/calendar.readonly',
       'include_granted_scopes': 'true',
@@ -44,7 +44,7 @@
       }
     })
     .then((data) => {
-      location.href = 'http://localhost:5173'
+      location.href = '/'
     })
   }
 </script>
