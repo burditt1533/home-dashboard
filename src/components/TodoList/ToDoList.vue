@@ -110,7 +110,6 @@ const fetchTasks = async () => {
     // response = await fetch(`${backendIp}/getAllTasks`)
     response = await fetch(`https://burdback.netlify.app/.netlify/functions/api`, {
       method: 'GET',
-      // mode: 'no-cors'
     })
   }catch(error) {
     // alert(error)
