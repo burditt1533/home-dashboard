@@ -58,17 +58,15 @@
   }
 }
 
-*,
-*::before,
-*::after {
+* {
   box-sizing: border-box;
-  margin: 0;
   font-weight: normal;
 }
 
 body {
   font-family: 'roboto';
   min-height: 100vh;
+  margin: 0;
   // color: var(--color-text);
   color: $dash-c-white;
   // background: $dash-c-blue;

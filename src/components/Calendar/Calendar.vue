@@ -82,15 +82,10 @@ const calendarOptions = computed(() => {
     contentHeight: 600,
     // aspectRatio: 3,
     // initialView: 'dayGridWeek',
-    initialView: 'dayGridMonth',
+    initialView: 'dayGrid',
     // initialDate: "2024-05-18",
     // initialView: 'timeGridFourDay',
-    views: {
-      dayGridMonth: {
-        type: 'dayGrid',
-        duration: { days: 1 }
-      }
-    },
+    dayCount: 30,
     dateClick: handleDateClick,
     events: useDashCalendar.googleEvents,
     allDay: false,

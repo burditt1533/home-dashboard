@@ -40,8 +40,6 @@ const imageClick = (index) => {
 }
 
 onMounted(async () => {
-  console.log(albums)
-
   // albumsData.value = albums
 
   // const res = await flickr("flickr.photosets.getList", {
@@ -82,32 +80,22 @@ const items = ref(Array.from({ length: 100000 }).map((_, i) => `Item #${i}`))
 
 <template>
   <div class="photos-container">
-    <VirtualScroller
-      :items="albums"
-      :itemSize="266"
-      orientation="horizontal"
-      :numToleratedItems="20"
-      :appendOnly="true"
-      style="height: 300px"
-      class="images-container"
-    >
-      <template v-slot:item="{ item }">
-        <div class="album-content" @click="fetchAlbumImages(item.id)">
-          <img
-            class="album-img"
-            :src="`https://live.staticflickr.com/${item.server}/${item.primary}_${item.secret}.jpg`"
-            alt="album"
-          />
-          <h4 class="album-title">{{ item.title._content }}</h4>
-        </div>
-      </template>
-    </VirtualScroller>
+
+    <div v-for='album in albums' :key='album.id' class="album-content" @click="fetchAlbumImages(album.id)">
+      <img
+        class="album-img"
+        :src="`https://live.staticflickr.com/${album.server}/${album.primary}_${album.secret}.jpg`"
+        alt="album"
+      />
+      <h4 class="album-title">{{ album.title._content }}</h4>
+    </div>
 
     <Dialog
       v-model:visible="isModalVisible"
       modal
       dismissableMask
       :pt="{ root: 'p-dialog-maximized' }"
+      @hide='photos = []'
     >
       <h4 class="photos-title">{{ photos.title }}</h4>
       <div class="photos-container">
@@ -176,7 +164,7 @@ const items = ref(Array.from({ length: 100000 }).map((_, i) => `Item #${i}`))
 
 <style scoped lang="scss">
 .photos-container {
-  width: 100%;
+  width: 100vw;
 }
 .images-container {
   padding: 50px 0;
@@ -208,7 +196,7 @@ const items = ref(Array.from({ length: 100000 }).map((_, i) => `Item #${i}`))
       font-weight: bold;
       text-align: center;
       margin-top: 10px;
-      color: #c87200;
+      color: $dash-c-white;
     }
   }
 }
@@ -218,23 +206,23 @@ const items = ref(Array.from({ length: 100000 }).map((_, i) => `Item #${i}`))
   flex-wrap: wrap;
   margin-top: 50px;
   justify-content: center;
-  gap: 20px;
+  gap: 50px 50px;
 
   .album-content {
     display: flex;
     align-items: center;
     flex-direction: column;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
     width: 25vw;
-    height: 25vw;
-    // border: 1px solid #e7e7e7;
     border-radius: 5px;
-    padding-top: 20px;
+    overflow: hidden;
+    
 
     .album-img {
-      width: 200px;
-      height: 200px;
+      width: 100%;
+      height: 80%;
+      max-height: 200px;
       object-fit: cover;
       object-position: 50% 10%;
       border-radius: 3px;
@@ -242,11 +230,15 @@ const items = ref(Array.from({ length: 100000 }).map((_, i) => `Item #${i}`))
     }
 
     .album-title {
-      font-size: 13px;
-      font-weight: bold;
+      font-size: 14px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: $dash-c-white;
+      background: $dash-c-card-bg;
+      width: 100%;
+      height: 20%;
       text-align: center;
-      margin-top: 10px;
-      color: #c87200;
     }
   }
 }

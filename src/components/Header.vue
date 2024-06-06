@@ -7,11 +7,12 @@ import LoginActions from '../components/LoginActions.vue'
 
 const isSidebarOpen = ref(false)
 const navLinks = ref([
-  { label: 'Guest View', icon: 'ri-close-large-line', route: '/guest'}
+  { label: 'Guest View', icon: 'ri-close-large-line', route: '/guest'},
+  { label: 'Karaoke', icon: 'ri-close-large-line', route: '/karaoke'},
 ])
 
-const handleClick = () => {
-  isSidebarOpen.value = true
+const toggleSidebar = () => {
+  isSidebarOpen.value = !isSidebarOpen.value
 }
 
 const menuIconClass = computed(() => {
@@ -23,7 +24,7 @@ onMounted(async () => {})
 
 <template>
   <div class="header-container">
-    <div class="menu-button" @click="handleClick">
+    <div class="menu-button" @click="toggleSidebar">
       <i :class="menuIconClass"></i>
     </div>
 
@@ -36,7 +37,7 @@ onMounted(async () => {})
       <Login />
       <div class="side-nav-container">
         <template v-for='link in navLinks' :key='link.label'>
-          <RouterLink :to="link.route" class="side-nav-link">
+          <RouterLink :to="link.route" @click='toggleSidebar' class="side-nav-link">
             <i :class="['side-nav-icon', link.icon]"></i>
             <h4 class='side-nav-label'>{{ link.label }}</h4>
           </RouterLink>

@@ -23,11 +23,16 @@ import WifiCode from '../components/WifiCode.vue'
     <Budget />
     <Calendar />
 
-    <!-- Weather Modal, Daily Hourly weather -->
     <!-- Food Menu -->
     <!-- Shower Order -->
     <!-- Music/Video Player -->
     <!-- Karaoke -->
+      <!-- make bg more interesting -->
+      <!-- Build catalogue -->
+      <!-- have song with lyrics and instrumental option -->
+      <!-- add music player -->
+        <!-- build controls -->
+      <!-- add song picker -->
     <!-- Large Image -->
     <!-- Distance to work -->
     <!-- Garage Opener -->
@@ -39,6 +44,7 @@ import WifiCode from '../components/WifiCode.vue'
     <!-- Guest View -->
     <!-- Each Person's personal page -->
     <!-- click todo names to open personal todo page -->
+    <!-- Clean up system -->
 
   </div>
 </template>

@@ -5,6 +5,7 @@ import Calendar from '../views/Calendar.vue'
 import Photos from '../views/Photos.vue'
 import Media from '../views/Media.vue'
 import Guest from '../views/Guest.vue'
+import Karaoke from '@/components/Karaoke/Karaoke.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -38,6 +39,11 @@ const router = createRouter({
       path: '/guest',
       name: 'guest',
       component: Guest
+    },
+    {
+      path: '/karaoke',
+      name: 'karaoke',
+      component: Karaoke
     }
   ]
 })
