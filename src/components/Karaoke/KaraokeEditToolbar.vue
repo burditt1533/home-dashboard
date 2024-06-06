@@ -25,45 +25,11 @@ const isForceCurrentIndex = ref(true)
 const modifiedLyrics = ref([])
 const isModifyStartTime = ref(false)
 
-watch(
-  () => karaokeStore.currentLyricTime,
-  () => {
-    const params = {
-      currentLineIndex: karaokeStore.currentLineIndex,
-      prevLineIndex: prevLineIndex.value,
-      currentSongTime: karaokeStore.currentLyricTime,
-      parsedElrc: displayedLyrics.value,
-      currentWordIndex: currentWordIndex.value,
-      isForceCurrentIndex: isForceCurrentIndex.value
-    }
-    prevLineIndex.value = karaokeStore.currentLineIndex
-
-    if (!isForceCurrentIndex.value) {
-      currentWordIndex.value = getCurrentWordIndex.init(params)
-      karaokeStore.set('currentWordIndex', currentWordIndex.value)
-    }
-
-    isForceCurrentIndex.value = false
-  }
-)
-
 const displayedLyrics = computed(() => {
   return karaokeStore.currentSong.lyrics.reformatted
 })
 
-const formattedLyrics = computed(() => {
-  return karaokeStore.isSingleLyricLine ? [lyricLine.value] : displayedLyrics.value
-})
-
-const lyricLine = computed(() => {
-  return displayedLyrics.value[karaokeStore.currentLineIndex] || []
-})
-
-const isMusicStarted = computed(() => {
-  return karaokeStore.musicPlayer.currentTime > 0
-})
-
-const toTimer = function (time, withHours) {
+const toTimer = (time, withHours) => {
   var h, m, s, ms
   h = Math.floor(time / 3600)
   h = isNaN(h) ? '--' : h >= 10 ? h : '0' + h
@@ -76,30 +42,12 @@ const toTimer = function (time, withHours) {
   return withHours ? h + ':' + m + ':' + s : m + ':' + s + '.' + ms
 }
 
-const currentLyricElement = computed(() => {
-  return document.getElementById('lyric-' + karaokeStore.currentLineIndex)
-})
-
-const goToCurrentLyric = (newIndex) => {
-  karaokeStore.set('currentLineIndex', newIndex)
-  if (karaokeStore.isEditMode) {
-    currentLyricElement.value?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'center',
-      inline: 'center'
-    })
-  }
-}
-
-// given current index
-// word to hear logic
-
 const modifyStartTime = (clickedWord, lineIndex, wordIndex) => {
   currentWordIndex.value = wordIndex
   isForceCurrentIndex.value = true
   isModifyStartTime.value = true
 
-  goToCurrentLyric(lineIndex)
+  karaokeStore.set('currentLineIndex', lineIndex)
 
   lyricModifierModal.value = true
 
@@ -120,8 +68,7 @@ const showLyricTime = (clickedWord, lineIndex, wordIndex) => {
   currentWordIndex.value = wordIndex
   isForceCurrentIndex.value = true
 
-  goToCurrentLyric(lineIndex)
-
+  karaokeStore.set('currentLineIndex', lineIndex)
   lyricModifierModal.value = true
 
   const prevLine = lineIndex === 0 ? displayedLyrics.value[0] : displayedLyrics.value[lineIndex - 1]
@@ -209,59 +156,6 @@ const logIt = () => {
 </script>
 
 <template>
-<div>
-  <div :class="['lyric-container', { single: karaokeStore.isSingleLyricLine }]">
-    <div v-if="!karaokeStore.currentSong.name" class="music-info">Choose A Song</div>
-    <template v-else-if="isMusicStarted">
-      <div
-        v-for="(line, lineIndex) in formattedLyrics"
-        :key="line.time"
-        :class="[
-          'lyric-wrap',
-          { current: lineIndex === karaokeStore.currentLineIndex || karaokeStore.isSingleLyricLine },
-          { editMode: karaokeStore.isEditMode }
-        ]"
-        :id="'lyric-' + lineIndex"
-      >
-        <span
-          v-if="karaokeStore.isEditMode"
-          class="smaller"
-          @click="modifyStartTime(line[0], lineIndex, 0)"
-        >
-          {{ line[0].lineStartData }}
-        </span>
-
-        <span
-          v-for="(word, wordIndex) in line"
-          :key="wordIndex"
-          :style="{ transitionDuration: karaokeStore.isEditMode ? 0 : `${word.timeUntilNext}s` }"
-          :class="[
-            'lyric',
-            {
-              highlight:
-                `${lineIndex}-${wordIndex}` ===
-                `${karaokeStore.isSingleLyricLine ? 0 : karaokeStore.currentLineIndex}-${currentWordIndex}`
-            },
-            { modifiying: word === currentModifiedLyric }
-          ]"
-          @click="showLyricTime(word, lineIndex, wordIndex)"
-        >
-          <div class="stacked-lyric">
-            <span>{{ word.lyric + ' ' }}</span>
-            <span :class="['smaller', { modified: modifiedLyrics.includes(word) }]">{{ word.time }}</span>
-          </div>
-        </span>
-      </div>
-    </template>
-
-    <div v-else-if="karaokeStore.countdownNumber < 4" class="countdown">{{ karaokeStore.countdownNumber }}</div>
-
-    <div v-else class="music-info">
-      <div>{{ karaokeStore.currentSong.artist }}</div>
-      <div>{{ karaokeStore.currentSong.name }}</div>
-    </div>
-  </div>
-
   <Toolbar :pt="{
       root: { class: 'toolbar' },
       start: { class: 'left' },
@@ -300,7 +194,6 @@ const logIt = () => {
         
     </template>
   </Toolbar>
-</div>
 </template>
 
 <style lang="scss">
@@ -316,111 +209,6 @@ const logIt = () => {
     outline: 0;
     border: 0;
     cursor: pointer;
-  }
-}
-
-.lyric-container {
-  background: $dash-c-card-bg;
-  width: 100%;
-  // height: 70vh;
-  height: 60vh;
-  overflow: scroll;
-  padding: 120px 20px;
-
-  .lyric-wrap {
-    color: white;
-    font-size: 40px;
-    opacity: 0.2;
-    text-align: center;
-    margin-bottom: 50px;
-    line-break: anywhere;
-    transform: scale(0.7);
-    transition: opacity 700ms, transform 300ms;
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    align-items: center;
-    flex-wrap: wrap;
-
-    .smaller {
-      font-size: 12px;
-      cursor: pointer;
-
-      &.modified {
-        color: orange;
-      }
-    }
-
-    &.editMode {
-      transform: scale(1);
-      opacity: 1;
-      transition: none;
-    }
-
-    .stacked-lyric {
-      display: inline-flex;
-      flex-direction: column;
-    }
-
-    .lyric {
-      background-size: 100%;
-      transition-property: background-size;
-      background-clip: text;
-      background-repeat: no-repeat;
-      background-image: linear-gradient(to right, orange 100%, white 1%);
-      cursor: pointer;
-
-      &.modifiying {
-        color: orange;
-        transition-duration: 0ms !important;
-      }
-    }
-
-    &.current {
-      transform: scale(1);
-      opacity: 1;
-
-      .lyric {
-        &.highlight {
-          color: transparent;
-          background-image: linear-gradient(to right, orange 001%, white 1.2%);
-          background-size: 10000%;
-        }
-      }
-    }
-  }
-
-  .music-info {
-    display: flex;
-    justify-content: center;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    height: 30vh;
-    font-size: 30px;
-  }
-
-  .countdown {
-    font-size: 176px;
-    font-weight: bold;
-    opacity: 0.6;
-    display: flex;
-    width: 100%;
-    height: 100%;
-    justify-content: center;
-    align-items: center;
-  }
-
-  &.single {
-    padding: 0 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    .lyric {
-      opacity: 1;
-      margin-bottom: 0;
-    }
   }
 }
 

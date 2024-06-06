@@ -17,7 +17,38 @@ export const dashKaraoke = defineStore('dashKaraoke', {
     isEditMode: true
   }),
   getters: {
-    // doubleCount: (state) => state.count * 2,
+    currentSongLyrics (state) {
+      return state.currentSong.lyrics.reformatted
+    },
+    previousLineIndex (state) {
+      return state.currentLineIndex === 0 ? state.currentLineIndex : state.currentLineIndex - 1
+    },
+    previousLine () {
+      return this.currentSongLyrics[this.previousLineIndex]
+    },
+    nextLineIndex (state) {
+      return state.currentLineIndex + 1
+    },
+    currentLine (state) {
+      return this.currentSongLyrics[state.currentLineIndex]
+    },
+    nextLine () {
+      return this.currentSongLyrics[this.nextLineIndex] || []
+    },
+    currentWord (state) {
+      return this.currentLine[state.currentWordIndex] || {}
+    },
+    previousWord (state) {
+      const isFirstWord = state.currentWordIndex === 0
+      const lastWordOfNextLine = this.previousLine[this.previousLine.length - 1] || {}
+      return isFirstWord ? lastWordOfNextLine : this.currentLine[state.currentWordIndex - 1] || {}
+    },
+    nextWord (state) {
+      const isLastWord = state.currentWordIndex === this.currentLine.length - 1 
+      const firstWordOfNextLine = this.nextLine[0] || {}
+      return isLastWord ? firstWordOfNextLine : this.currentLine[state.currentWordIndex + 1] || {}
+    },
+
   },
   actions: {
     set(property, value) {
