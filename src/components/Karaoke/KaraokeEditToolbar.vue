@@ -20,7 +20,6 @@ const currentModifiedLineIndex = ref(0)
 const modifiedLyricToHear = ref(0)
 const sliderValue = ref(0)
 const isForceCurrentIndex = ref(true)
-const modifiedLyrics = ref([])
 const isModifyStartTime = ref(false)
 
 const displayedLyrics = computed(() => {
@@ -40,79 +39,11 @@ const toTimer = (time, withHours) => {
   return withHours ? h + ':' + m + ':' + s : m + ':' + s + '.' + ms
 }
 
-const modifyStartTime = (clickedWord, lineIndex, wordIndex) => {
-  currentWordIndex.value = wordIndex
-  isForceCurrentIndex.value = true
-  isModifyStartTime.value = true
-
-  karaokeStore.set('currentLineIndex', lineIndex)
-
-  lyricModifierModal.value = true
-
-  const prevLine = displayedLyrics.value[lineIndex - 1]
-  const lastOfPrevLine = prevLine[prevLine.length - 1]
-  const prevWordIndex = currentWordIndex.value - 1
-  const isFirstWord = currentWordIndex.value === 0
-
-  currentModifiedLine.value = displayedLyrics.value[lineIndex]
-  modifiedLyricToHear.value = isFirstWord
-    ? lastOfPrevLine
-    : currentModifiedLine.value[prevWordIndex]
-  currentModifiedLyric.value = currentModifiedLine.value[currentWordIndex.value]
-  currentModifiedLineIndex.value = lineIndex
-
-  runItBack()
-}
-
-const showLyricTime = (clickedWord, lineIndex, wordIndex) => {
-  kts.updateLyric()
-  // currentWordIndex.value = wordIndex
-  // isForceCurrentIndex.value = true
-
-  // karaokeStore.set('currentLineIndex', lineIndex)
-  // lyricModifierModal.value = true
-
-  // const prevLine = lineIndex === 0 ? displayedLyrics.value[0] : displayedLyrics.value[lineIndex - 1]
-  // const lastOfPrevLine = prevLine[prevLine.length - 1]
-  // const prevWordIndex = currentWordIndex.value - 1
-  // const isFirstWord = currentWordIndex.value === 0
-
-  // modifiedLyricToHear.value = isFirstWord
-  //   ? lastOfPrevLine
-  //   : displayedLyrics.value[lineIndex][prevWordIndex]
-  // currentModifiedLyric.value = displayedLyrics.value[lineIndex][currentWordIndex.value]
-
-  // runItBack()
-}
-
-const updateLineStartTime = (lyricTime) => {
+const updateLyricTime = (property, lyricTime) => {
   const kts = karaokeToolbarStore
-  const newTime = lyricTime || kts.currentModifiedLyric.lineStartData + sliderValue.value
-  kts.updateLineStartTime(newTime)
-  // currentModifiedLine.value.forEach((lyric) => (lyric.lineStartData += sliderValue.value))
+  const newTime = lyricTime || kts.currentModifiedLyric[property] + sliderValue.value
 
-  // karaokeStore.currentSong.lyrics.raw.lyrics[currentModifiedLineIndex.value].timestamp =
-  //   currentModifiedLyric.value.lineStartData + sliderValue.value
-  // const newSong = karaokeStore.currentSong
-
-  
-
-  // karaokeStore.set('currentSong', newSong)
-  // karaokeStore.set('runner', new Runner(karaokeStore.currentSong.lyrics.raw))
-
-  // updateElrcFile()
-  // resetModifiers()
-}
-
-const updateLyricTime = (lyricTime) => {
-  const kts = karaokeToolbarStore
-  const newTime = lyricTime || kts.currentModifiedLyric.time + sliderValue.value
-  kts.updateLyricTime(newTime)
-  // if (!!lyricTime) {
-  //   currentModifiedLyric.value.time = lyricTime
-  // } else {
-  //   currentModifiedLyric.value.time += sliderValue.value
-  // }
+  kts.isModifyStartTime ? kts.updateLineStartTime(newTime) : kts.updateLyricTime(newTime)
 
   updateElrcFile()
   resetModifiers()
@@ -137,7 +68,6 @@ const updateElrcFile = async () => {
 }
 
 const resetModifiers = () => {
-  modifiedLyrics.value.push(currentModifiedLyric.value)
   currentModifiedLyric.value = null
   modifiedLyricToHear.value = null
   isModifyStartTime.value = false
@@ -153,18 +83,21 @@ const updateSliderValue = (amount) => {
 
 const runItBack = () => {
   const kts = karaokeToolbarStore
-  const lyric = isModifyStartTime.value ? kts.previousModifiedLyric : kts.currentModifiedLyric
+  const lyric = karaokeToolbarStore.isModifyStartTime ? kts.previousModifiedLyric : kts.currentModifiedLyric
 
   karaokeStore.setPlaybackPosition(lyric.time + sliderValue.value)
 }
 
 const handleSaveClick = () => {
-  karaokeToolbarStore.isModifyStartTime ? updateLineStartTime() : updateLyricTime()
+  const property = karaokeToolbarStore.isModifyStartTime ? 'lineStartData' : 'time'
+  console.log(property);
+  updateLyricTime(property)
 }
 
 const logIt = () => {
   const time = karaokeStore.musicPlayer.currentTime
   // updateLyricTime(time)
+  console.log(time)
 }
 </script>
 
@@ -178,7 +111,8 @@ const logIt = () => {
     }"
   >
     <template #start>
-      {{ currentModifiedLyric?.lyric }} - {{ currentModifiedLyric?.time }}
+      {{ karaokeToolbarStore.currentModifiedLyric?.lyric }} - 
+      {{ karaokeToolbarStore.currentModifiedLyric?.time }}
     </template>
 
     <template #center>

@@ -2,14 +2,12 @@ import billieLyrics from '@/assets/music/what-was-i-made-for.elrc?raw'
 import usherLyrics from '@/assets/music/on-the-side.elrc?raw'
 import allIAskLyrics from '@/assets/music/all-i-ask.elrc?raw'
 import swvLyrics from '@/assets/music/swv.lrc?raw'
-import rapGodLyrics from '@/assets/music/rap-god.lrc?raw'
 import fireLovinLyrics from '@/assets/music/fire-lovin.elrc?raw'
 
 import billie from '@/assets/music/what-was-i-made-for.mp3'
 import usher from '@/assets/music/on-the-side.mp3'
 import allIAsk from '@/assets/music/all-i-ask.mp3'
 import swv from '@/assets/music/swv.mp3'
-import rapGod from '@/assets/music/rap-god.mp3'
 import fireLovin from '@/assets/music/fire-lovin.mp3'
 import { Lrc } from 'lrc-kit'
 
@@ -143,7 +141,8 @@ const songs = [
     name: 'Fire Lovin',
     artist: 'Pleasure P',
     url: fireLovin,
-    lyrics: processLyrics(fireLovinLyrics)
+    lyrics: processLyrics(fireLovinLyrics),
+    tempo: 93
   },
   // {
   //   name: 'Youre always on my mind',

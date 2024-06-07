@@ -22,12 +22,7 @@
         isForceCurrentIndex: isForceCurrentIndex.value
       }
       prevLineIndex.value = karaokeStore.currentLineIndex
-
-
-      if (!isForceCurrentIndex.value) {
-        karaokeStore.set('currentWordIndex', getCurrentWordIndex.init(params))
-      }
-
+      karaokeStore.set('currentWordIndex', getCurrentWordIndex.init(params))
       isForceCurrentIndex.value = false
     }
   )
@@ -61,12 +56,17 @@
   }
 
   const selectModifiedLyric = (lineIndex, wordIndex, isModifyStartTime) => {
-    karaokeToolbarStore.set('currentModifiedLineIndex', lineIndex)
-    karaokeToolbarStore.set('currentModifiedLyricIndex', wordIndex)
-    karaokeToolbarStore.set('isModifyStartTime', isModifyStartTime)
-    // isForceCurrentIndex.value = true
+    const kts = karaokeToolbarStore
+    isForceCurrentIndex.value = true
+    kts.set('currentModifiedLineIndex', lineIndex)
+    kts.set('currentModifiedLyricIndex', wordIndex)
+    kts.set('isModifyStartTime', isModifyStartTime)
+    karaokeStore.set('currentLineIndex', lineIndex)
+    karaokeStore.set('currentWordIndex', wordIndex)
 
-    karaokeStore.setPlaybackPosition(karaokeToolbarStore.currentModifiedLyric.time)
+    const lyricToHear = kts.isModifyStartTime ? kts.previousModifiedLyric : kts.currentModifiedLyric
+
+    karaokeStore.setPlaybackPosition(lyricToHear.time)
   }
 </script>
 
@@ -92,7 +92,7 @@
             class="smaller"
             @click="selectModifiedLyric(lineIndex, 0, true)"
           >
-            {{ line[0].lineStartData }}
+            {{ line[0].lineStartData.toFixed(3) }}
           </span>
 
           <span
@@ -113,7 +113,7 @@
             <div class="stacked-lyric">
               <span>{{ word.lyric + ' ' }}</span>
               <span :class="['smaller', { modified: karaokeToolbarStore.modifiedLyrics.includes(word) }]">{{
-                word.time
+                word.time.toFixed(3)
               }}</span>
             </div>
           </span>

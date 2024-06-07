@@ -116,7 +116,7 @@ onMounted(() => {
       :audioList="audioList.map((song) => song.url)"
       :beforePlay="startCoundown"
       theme-color="white"
-      :progressInterval="300"
+      :progressInterval="100"
       @timeupdate="timeUpdate"
       @progressMove="progressMove"
     />
