@@ -1,16 +1,14 @@
 <script setup>
 import { computed, ref, onMounted, watch } from 'vue'
-import InputSwitch from 'primevue/inputswitch'
-import InputNumber from 'primevue/inputnumber'
-import InputText from 'primevue/inputtext'
-import Toolbar from 'primevue/toolbar';
+import Toolbar from 'primevue/toolbar'
 import Button from 'primevue/button'
-import getCurrentWordIndex from './getCurrentWordIndex.js'
 import { Runner } from 'lrc-kit'
 import Knob from 'primevue/knob'
-import { dashKaraoke } from '@/stores/dashKaraoke'
+import { karaoke } from '@/stores/karaoke'
+import { karaokeToolbar } from '@/stores/karaokeToolbar'
 
-const karaokeStore = dashKaraoke()
+const karaokeStore = karaoke()
+const karaokeToolbarStore = karaokeToolbar()
 
 const currentWordIndex = ref(0)
 const prevLineIndex = ref(0)
@@ -57,7 +55,9 @@ const modifyStartTime = (clickedWord, lineIndex, wordIndex) => {
   const isFirstWord = currentWordIndex.value === 0
 
   currentModifiedLine.value = displayedLyrics.value[lineIndex]
-  modifiedLyricToHear.value = isFirstWord ? lastOfPrevLine : currentModifiedLine.value[prevWordIndex]
+  modifiedLyricToHear.value = isFirstWord
+    ? lastOfPrevLine
+    : currentModifiedLine.value[prevWordIndex]
   currentModifiedLyric.value = currentModifiedLine.value[currentWordIndex.value]
   currentModifiedLineIndex.value = lineIndex
 
@@ -65,42 +65,54 @@ const modifyStartTime = (clickedWord, lineIndex, wordIndex) => {
 }
 
 const showLyricTime = (clickedWord, lineIndex, wordIndex) => {
-  currentWordIndex.value = wordIndex
-  isForceCurrentIndex.value = true
+  kts.updateLyric()
+  // currentWordIndex.value = wordIndex
+  // isForceCurrentIndex.value = true
 
-  karaokeStore.set('currentLineIndex', lineIndex)
-  lyricModifierModal.value = true
+  // karaokeStore.set('currentLineIndex', lineIndex)
+  // lyricModifierModal.value = true
 
-  const prevLine = lineIndex === 0 ? displayedLyrics.value[0] : displayedLyrics.value[lineIndex - 1]
-  const lastOfPrevLine = prevLine[prevLine.length - 1]
-  const prevWordIndex = currentWordIndex.value - 1
-  const isFirstWord = currentWordIndex.value === 0
+  // const prevLine = lineIndex === 0 ? displayedLyrics.value[0] : displayedLyrics.value[lineIndex - 1]
+  // const lastOfPrevLine = prevLine[prevLine.length - 1]
+  // const prevWordIndex = currentWordIndex.value - 1
+  // const isFirstWord = currentWordIndex.value === 0
 
-  modifiedLyricToHear.value = isFirstWord ? lastOfPrevLine : displayedLyrics.value[lineIndex][prevWordIndex]
-  currentModifiedLyric.value = displayedLyrics.value[lineIndex][currentWordIndex.value]
+  // modifiedLyricToHear.value = isFirstWord
+  //   ? lastOfPrevLine
+  //   : displayedLyrics.value[lineIndex][prevWordIndex]
+  // currentModifiedLyric.value = displayedLyrics.value[lineIndex][currentWordIndex.value]
 
-  runItBack()
+  // runItBack()
 }
 
-const updateLineStartTime = () => {
-  currentModifiedLine.value.forEach((lyric) => lyric.lineStartData += sliderValue.value)
+const updateLineStartTime = (lyricTime) => {
+  const kts = karaokeToolbarStore
+  const newTime = lyricTime || kts.currentModifiedLyric.lineStartData + sliderValue.value
+  kts.updateLineStartTime(newTime)
+  // currentModifiedLine.value.forEach((lyric) => (lyric.lineStartData += sliderValue.value))
 
-  karaokeStore.currentSong.lyrics.raw.lyrics[currentModifiedLineIndex.value].timestamp = currentModifiedLyric.value.lineStartData + sliderValue.value
-  const newSong = karaokeStore.currentSong
+  // karaokeStore.currentSong.lyrics.raw.lyrics[currentModifiedLineIndex.value].timestamp =
+  //   currentModifiedLyric.value.lineStartData + sliderValue.value
+  // const newSong = karaokeStore.currentSong
 
-  karaokeStore.set('currentSong', newSong)
-  karaokeStore.set('runner', new Runner(karaokeStore.currentSong.lyrics.raw))
   
-  updateElrcFile()
-  resetModifiers()
+
+  // karaokeStore.set('currentSong', newSong)
+  // karaokeStore.set('runner', new Runner(karaokeStore.currentSong.lyrics.raw))
+
+  // updateElrcFile()
+  // resetModifiers()
 }
 
 const updateLyricTime = (lyricTime) => {
-  if(!!lyricTime) {
-    currentModifiedLyric.value.time = lyricTime
-  } else {
-    currentModifiedLyric.value.time += sliderValue.value
-  }
+  const kts = karaokeToolbarStore
+  const newTime = lyricTime || kts.currentModifiedLyric.time + sliderValue.value
+  kts.updateLyricTime(newTime)
+  // if (!!lyricTime) {
+  //   currentModifiedLyric.value.time = lyricTime
+  // } else {
+  //   currentModifiedLyric.value.time += sliderValue.value
+  // }
 
   updateElrcFile()
   resetModifiers()
@@ -132,78 +144,89 @@ const resetModifiers = () => {
   sliderValue.value = 0
 }
 
-const runItBack = () => {
-  const lyric = isModifyStartTime.value ? modifiedLyricToHear.value :  currentModifiedLyric.value
-  karaokeStore.musicPlayer.$refs.audio.currentTime = lyric.time + sliderValue.value
-  karaokeStore.musicPlayer.currentTime = lyric.time + sliderValue.value
-  karaokeStore.musicPlayer.play()
-}
-
 const updateSliderValue = (amount) => {
   sliderValue.value += amount
+  karaokeToolbarStore.set('modifySliderTime', sliderValue.value)
+
   runItBack()
 }
 
-const onHideModal = () => {
-  sliderValue.value += 0
+const runItBack = () => {
+  const kts = karaokeToolbarStore
+  const lyric = isModifyStartTime.value ? kts.previousModifiedLyric : kts.currentModifiedLyric
+
+  karaokeStore.setPlaybackPosition(lyric.time + sliderValue.value)
+}
+
+const handleSaveClick = () => {
+  karaokeToolbarStore.isModifyStartTime ? updateLineStartTime() : updateLyricTime()
 }
 
 const logIt = () => {
   const time = karaokeStore.musicPlayer.currentTime
-  updateLyricTime(time)
-  console.log(time, toTimer(time))
+  // updateLyricTime(time)
 }
 </script>
 
 <template>
-  <Toolbar :pt="{
+  <Toolbar
+    :pt="{
       root: { class: 'toolbar' },
       start: { class: 'left' },
       center: { class: 'middle' },
       end: { class: 'right' }
     }"
   >
-    <template #start >
+    <template #start>
       {{ currentModifiedLyric?.lyric }} - {{ currentModifiedLyric?.time }}
     </template>
 
     <template #center>
-      <Button @click='logIt' icon="ri-time-line" severity="secondary" />
-      <Button @click='sliderValue = 0' icon="ri-delete-back-line" severity="secondary" />
-      <Button @click="updateSliderValue(-0.05)" icon="ri-subtract-line" class="mr-2" severity="secondary" />
-        <Knob
-          class='knob'
-          v-model="sliderValue"
-          :step="0.001"
-          :min="-10"
-          :max="10"
-          :size='70'
-          :strokeWidth="5"
-          readonly
-          @click='runItBack'
-          :valueTemplate="(value) => {
-            const t = isModifyStartTime ? currentModifiedLyric?.lineStartData : currentModifiedLyric?.time
+      <Button @click="logIt" icon="ri-time-line" severity="secondary" />
+      <Button @click="sliderValue = 0" icon="ri-delete-back-line" severity="secondary" />
+      <Button
+        @click="updateSliderValue(-0.05)"
+        icon="ri-subtract-line"
+        class="mr-2"
+        severity="secondary"
+      />
+      <Knob
+        class="knob"
+        v-model="sliderValue"
+        :step="0.001"
+        :min="-10"
+        :max="10"
+        :size="70"
+        :strokeWidth="5"
+        readonly
+        @click="runItBack"
+        :valueTemplate="
+          (value) => {
+            const t = karaokeToolbarStore.isModifyStartTime
+              ? karaokeToolbarStore.currentModifiedLyric?.lineStartData
+              : karaokeToolbarStore.currentModifiedLyric?.time
             return (t + value).toFixed(3)
-          }"
-        />
-      <Button @click="updateSliderValue(0.05)" icon="ri-add-line" class="mr-2" severity="secondary" />
-      <Button @click="isModifyStartTime.value ? updateLineStartTime : updateLyricTime" icon="ri-save-line" severity="secondary" />
+          }
+        "
+      />
+      <Button
+        @click="updateSliderValue(0.05)"
+        icon="ri-add-line"
+        class="mr-2"
+        severity="secondary"
+      />
+      <Button
+        @click="handleSaveClick"
+        icon="ri-save-line"
+        severity="secondary"
+      />
     </template>
 
-    <template #end>
-        
-    </template>
+    <template #end> </template>
   </Toolbar>
 </template>
 
 <style lang="scss">
-.modifier-container {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  justify-content: space-between;
-}
-
 .knob {
   svg {
     outline: 0;
@@ -231,6 +254,6 @@ const logIt = () => {
 
   .right {
     width: 20%;
-  } 
+  }
 }
 </style>
