@@ -2,11 +2,11 @@
 import { computed, ref, onMounted, watch } from 'vue'
 import InputSwitch from 'primevue/inputswitch'
 import InputNumber from 'primevue/inputnumber'
-import Button from 'primevue/button';
+import Button from 'primevue/button'
 import AudioPlayer from '@liripeng/vue-audio-player'
-import { dashKaraoke } from '@/stores/dashKaraoke'
+import { karaoke } from '@/stores/karaoke'
 
-const karaokeStore = dashKaraoke()
+const karaokeStore = karaoke()
 const runnerOffset = ref(300)
 const isSingleLyricLine = ref(false)
 const audioPlayerRef = ref(null)
@@ -86,12 +86,14 @@ onMounted(() => {
 <template>
   <div class="player-container">
     <div class="control-bar">
-      <InputSwitch v-model="isSingleLyricLine" @update:modelValue='singleLyricLineChange' />
+      <InputSwitch v-model="isSingleLyricLine" @update:modelValue="singleLyricLineChange" />
       <div class="music-info">
-        <div v-if='!!karaokeStore.currentSong.artist'>{{ karaokeStore.currentSong.artist }} - {{ karaokeStore.currentSong.name }}</div>
+        <div v-if="!!karaokeStore.currentSong.artist">
+          {{ karaokeStore.currentSong.artist }} - {{ karaokeStore.currentSong.name }}
+        </div>
       </div>
       <InputNumber
-        @update:modelValue='onOffsetChange'
+        @update:modelValue="onOffsetChange"
         v-model="runnerOffset"
         inputId="horizontal-buttons"
         showButtons
@@ -111,46 +113,46 @@ onMounted(() => {
     </div>
     <audio-player
       ref="audioPlayerRef"
-      :audioList="audioList.map(song => song.url)"
-      :beforePlay='startCoundown'
+      :audioList="audioList.map((song) => song.url)"
+      :beforePlay="startCoundown"
       theme-color="white"
-      :progressInterval='300'
-      @timeupdate='timeUpdate'
-      @progressMove='progressMove'
+      :progressInterval="100"
+      @timeupdate="timeUpdate"
+      @progressMove="progressMove"
     />
   </div>
 </template>
 
 <style lang="scss">
-  .player-container {
-    background: $dash-c-card-bg;
-    padding: 20px 0;
-    height: 15%;
+.player-container {
+  background: $dash-c-card-bg;
+  padding: 20px 0;
+  height: 15%;
 
-    .play-icon {
-      font-size: 50px;
-      cursor: pointer;
-    }
+  .play-icon {
+    font-size: 50px;
+    cursor: pointer;
   }
+}
 
-  .control-bar {
+.control-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+
+  .music-info {
     display: flex;
+    gap: 7px;
     align-items: center;
-    justify-content: space-between;
-    width: 100%;
+    font-size: 20px;
+    padding-left: 20px;
+  }
 
-    .music-info {
-      display: flex;
-      gap: 7px;
-      align-items: center;
-      font-size: 20px;
-      padding-left: 20px;
-    }
-
-    .offset {
-      input {
-        width: 100px;
-      }
+  .offset {
+    input {
+      width: 100px;
     }
   }
+}
 </style>

@@ -35,7 +35,6 @@ const init = (params) => {
   parsedElrc = params.parsedElrc
   prevLineIndex = params.prevLineIndex
   currentWordIndex = params.currentWordIndex
-  
   currentWordIndex = currentLineIndex === prevLineIndex || isForceCurrentIndex ? currentWordIndex : 0
   currentLineData = parsedElrc[currentLineIndex] || []
 

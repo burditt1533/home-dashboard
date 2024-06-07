@@ -7,10 +7,18 @@
   // https://github.com/weirongxu/lrc-kit
 
   // style it
-  // save the new elrc to file system
   // save isSingleLyrics value as localstorage, set up to store other data in object
-  // the line time is actually the first word of the line's time
-  // lyrics component getting too big
+  // just finished seperating toolbar, everything works
+  // toggle for edit mode
+  // hide all of the edit tools when toggle is false
+  // clicking line time plays second word instead of first
+  // make modified word a slightly different color
+  // beeps for countdown
+  // add button to the right of toolbar to even it out
+  // create click to edit mode/ or space to edit
+  // make json file for lyrics instead of elrc
+
+
 </script>
 
 <template>
