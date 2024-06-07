@@ -21,6 +21,9 @@ const modifiedLyricToHear = ref(0)
 const sliderValue = ref(0)
 const isForceCurrentIndex = ref(true)
 const isModifyStartTime = ref(false)
+const isClickEditMode = ref(false)
+const editCursor = ref(0)
+const editLineCursor = ref(0)
 
 const displayedLyrics = computed(() => {
   return karaokeStore.currentSong.lyrics.reformatted
@@ -41,7 +44,8 @@ const toTimer = (time, withHours) => {
 
 const updateLyricTime = (property, lyricTime) => {
   const kts = karaokeToolbarStore
-  const newTime = lyricTime || kts.currentModifiedLyric[property] + sliderValue.value
+  const oldTime = property === 'lineData' ?  kts.currentModifiedLyric.lineData.time : kts.currentModifiedLyric.time
+  const newTime = lyricTime || oldTime + sliderValue.value
 
   kts.isModifyStartTime ? kts.updateLineStartTime(newTime) : kts.updateLyricTime(newTime)
 
@@ -49,12 +53,18 @@ const updateLyricTime = (property, lyricTime) => {
   resetModifiers()
 }
 
+const handleSaveClick = () => {
+  const property = karaokeToolbarStore.isModifyStartTime ? 'lineData' : 'time'
+  updateLyricTime(property)
+}
+
+
 const updateElrcFile = async () => {
   let sheet = ''
 
   displayedLyrics.value.forEach((line, index) => {
     if (index === 0) return
-    sheet += '\n[' + toTimer(line[0].lineStartData) + '] '
+    sheet += '\n[' + toTimer(line[0].lineData.time) + '] '
 
     line.forEach((lyric) => {
       sheet += `${lyric.lyric} <${toTimer(lyric.time)}> `
@@ -82,22 +92,52 @@ const updateSliderValue = (amount) => {
 }
 
 const runItBack = () => {
-  const kts = karaokeToolbarStore
-  const lyric = karaokeToolbarStore.isModifyStartTime ? kts.previousModifiedLyric : kts.currentModifiedLyric
+  // const kts = karaokeToolbarStore
+  // const lyric = karaokeToolbarStore.isModifyStartTime ? kts.previousModifiedLyric : kts.currentModifiedLyric
 
-  karaokeStore.setPlaybackPosition(lyric.time + sliderValue.value)
-}
-
-const handleSaveClick = () => {
-  const property = karaokeToolbarStore.isModifyStartTime ? 'lineStartData' : 'time'
-  console.log(property);
-  updateLyricTime(property)
+  karaokeStore.setPlaybackPosition(karaokeToolbarStore.lyricToHear + sliderValue.value)
 }
 
 const logIt = () => {
-  const time = karaokeStore.musicPlayer.currentTime
+  // const time = karaokeStore.musicPlayer.currentTime
   // updateLyricTime(time)
-  console.log(time)
+  // console.log(time)
+  // console.log(karaokeStore.currentSong.lyrics.reformatted)
+
+  // let theLyric = null
+  // karaokeStore.currentSong.lyrics.reformatted.some((line) => {
+  //   return theLyric = line.find(({ index }) => index === editCursor.value)
+  // })
+
+  // karaokeToolbarStore.updateCursorLyricTime(theLyric)
+  // editCursor.value++
+
+  // let isLyricFound = false
+  // karaokeStore.currentSong.lyrics.reformatted.forEach((line) => {
+
+  //   line.forEach(lyric => {
+  //     if(lyric.index === editCursor.value) {
+  //       karaokeToolbarStore.updateCursorLyricTime(lyric, karaokeStore.musicPlayer.currentTime)
+  //       isLyricFound = true
+  //     }
+  //   })
+  // })
+  // editCursor.value++
+
+  const lyricDump = []
+  karaokeStore.currentSong.lyrics.reformatted.forEach((line, index) => {
+    if (index > 0) {
+      line.forEach(lyric => {
+        lyricDump.push(lyric)
+      })
+    }
+  })
+  console.log(lyricDump);
+
+  //edit just line start time
+
+  // karaokeToolbarStore.updateCursorLineTime(editLineCursor.value)
+  // editLineCursor.value++
 }
 </script>
 
@@ -137,7 +177,7 @@ const logIt = () => {
         :valueTemplate="
           (value) => {
             const t = karaokeToolbarStore.isModifyStartTime
-              ? karaokeToolbarStore.currentModifiedLyric?.lineStartData
+              ? karaokeToolbarStore.currentModifiedLyric?.lineData.time
               : karaokeToolbarStore.currentModifiedLyric?.time
             return (t + value).toFixed(3)
           }
@@ -153,6 +193,11 @@ const logIt = () => {
         @click="handleSaveClick"
         icon="ri-save-line"
         severity="secondary"
+      />
+      <Button
+        @click="isClickEditMode = !isClickEditMode"
+        icon="ri-edit-2-line"
+        :severity="isClickEditMode ? 'info' : 'secondary'"
       />
     </template>
 

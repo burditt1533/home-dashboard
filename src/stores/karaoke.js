@@ -6,7 +6,6 @@ export const karaoke = defineStore('karaoke', {
     musicPlayer: {},
     currentSong: {},
     isSingleLyricLine: false,
-    currentSongTime: 0,
     currentLyricTime: 0,
     currentLineIndex: 0,
     currentWordIndex: 0,

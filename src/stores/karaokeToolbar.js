@@ -42,6 +42,9 @@ export const karaokeToolbar = defineStore('karaokeToolbar', {
       const firstWordOfNextLine = this.nextModifiedLine[0] || {}
       return isLastWord ? firstWordOfNextLine : this.currentModifiedLine[state.currentModifiedLyricIndex + 1] || {}
     },
+    lyricToHear() {
+      return this.isModifyStartTime ? this.currentModifiedLyric.lineData.time : this.currentModifiedLyric.time
+    }
   },
   actions: {
     set(property, value) {
@@ -54,7 +57,7 @@ export const karaokeToolbar = defineStore('karaokeToolbar', {
       this.currentModifiedLyricIndex = 0
     },
     updateLineStartTime (time) {
-      this.currentModifiedLine.forEach((lyric) => (lyric.lineStartData = time))
+      this.currentModifiedLine.forEach((lyric) => (lyric.lineData.time = time))
       this.modifiedLyrics.push(this.currentModifiedLyric) // make this the beginning line number
 
       karaoke().currentSong.lyrics.raw.lyrics[this.currentModifiedLineIndex].timestamp = time
@@ -63,6 +66,16 @@ export const karaokeToolbar = defineStore('karaokeToolbar', {
 
       this.currentModifiedLineIndex = 0
       this.currentModifiedLyricIndex = 0
+    },
+    updateCursorLyricTime (lyric, time) {
+      lyric.time = time
+    },
+    updateCursorLineTime (cursor) {
+      const line = karaoke().currentSong.lyrics.reformatted[cursor]
+      line.forEach((lyric) => {
+        lyric.lineData.time = karaoke().musicPlayer.currentTime
+      })
+      console.log(line)
     }
   }
 })

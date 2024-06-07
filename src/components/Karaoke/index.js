@@ -3,12 +3,14 @@ import usherLyrics from '@/assets/music/on-the-side.elrc?raw'
 import allIAskLyrics from '@/assets/music/all-i-ask.elrc?raw'
 import swvLyrics from '@/assets/music/swv.lrc?raw'
 import fireLovinLyrics from '@/assets/music/fire-lovin.elrc?raw'
+import icuLyrics from '@/assets/music/icu.elrc?raw'
 
 import billie from '@/assets/music/what-was-i-made-for.mp3'
 import usher from '@/assets/music/on-the-side.mp3'
 import allIAsk from '@/assets/music/all-i-ask.mp3'
 import swv from '@/assets/music/swv.mp3'
 import fireLovin from '@/assets/music/fire-lovin.mp3'
+import icu from '@/assets/music/icu.mp3'
 import { Lrc } from 'lrc-kit'
 
 const processLyrics = (lyric) => {
@@ -59,7 +61,7 @@ const processElrc2 = (lyric) => {
   let lineThings = []
   let lineArray = []
   let lyricData = null
-  let lineStartData = null
+  let lineStartTime = null
   let lineIndex = -1
 
   splitted.unshift('<00:11.000>')
@@ -68,9 +70,11 @@ const processElrc2 = (lyric) => {
   splitted.unshift(' ')
   splitted.unshift('[00:00.000]')
 
+  let counter = 0
+
   splitted.forEach(text => {
     if (text?.includes('[')) {
-      lineStartData = convertTime(text).current
+      lineStartTime = convertTime(text).current
       lineIndex++
       if(lineArray.length) lineThings.push(lineArray)
       lineArray = []
@@ -79,19 +83,27 @@ const processElrc2 = (lyric) => {
     if (text?.includes('<')) {
       const convertedTime = convertTime(text, prevTime)
 
-      lineArray.push({
+      let lyricHash = {
         time: convertedTime.current,
         lyric: lyricData,
-        lineStartData: lineStartData,
-        timeUntilNext: convertedTime.timeUntilNext
-      })
+        lineData: { time: lineStartTime },
+        timeUntilNext: convertedTime.timeUntilNext,
+      }
+
+      if (lineThings.length > 0) {
+        lyricHash.index = counter
+        lyricHash.lineData.index = lineThings.length - 1
+        counter++;
+      }
+
+      lineArray.push(lyricHash)
 
       prevTime = convertedTime.current
     }
   })
   if(lineArray.length) lineThings.push(lineArray)
 
-  // const groupedTimes = Object.groupBy(lineThings, ({ lineStartData }) => lineStartData);
+  // const groupedTimes = Object.groupBy(lineThings, ({ lineData }) => lineData.time);
 
   return lineThings
 }
@@ -144,12 +156,13 @@ const songs = [
     lyrics: processLyrics(fireLovinLyrics),
     tempo: 93
   },
-  // {
-  //   name: 'Youre always on my mind',
-  //   artist: 'SWV',
-  //   url: swv,
-  //   lyrics: processLyrics(swvLyrics)
-  // },
+  {
+    name: 'ICU',
+    artist: 'Coco Jones',
+    url: icu,
+    lyrics: processLyrics(icuLyrics),
+    tempo: 0
+  },
   {
     name: 'All I Ask',
     artist: 'Adele',

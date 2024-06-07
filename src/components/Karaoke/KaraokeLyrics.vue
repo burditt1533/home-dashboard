@@ -64,9 +64,7 @@
     karaokeStore.set('currentLineIndex', lineIndex)
     karaokeStore.set('currentWordIndex', wordIndex)
 
-    const lyricToHear = kts.isModifyStartTime ? kts.previousModifiedLyric : kts.currentModifiedLyric
-
-    karaokeStore.setPlaybackPosition(lyricToHear.time)
+    karaokeStore.setPlaybackPosition(kts.lyricToHear)
   }
 </script>
 
@@ -92,7 +90,7 @@
             class="smaller"
             @click="selectModifiedLyric(lineIndex, 0, true)"
           >
-            {{ line[0].lineStartData.toFixed(3) }}
+            {{ line[0].lineData.time?.toFixed(3) }}
           </span>
 
           <span

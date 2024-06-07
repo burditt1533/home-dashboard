@@ -11,7 +11,6 @@
   // just finished seperating toolbar, everything works
   // toggle for edit mode
   // hide all of the edit tools when toggle is false
-  // clicking line time plays second word instead of first
   // make modified word a slightly different color
   // beeps for countdown
   // add button to the right of toolbar to even it out
