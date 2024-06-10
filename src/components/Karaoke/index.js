@@ -1,40 +1,19 @@
 import billieLyrics from '@/assets/music/what-was-i-made-for.elrc?raw'
+import billieJSON from '@/assets/music/what-was-i-made-for.json'
 import usherLyrics from '@/assets/music/on-the-side.elrc?raw'
+import usherJSON from '@/assets/music/on-the-side.json'
 import allIAskLyrics from '@/assets/music/all-i-ask.elrc?raw'
-import swvLyrics from '@/assets/music/swv.lrc?raw'
+import allIAskJSON from '@/assets/music/all-i-ask.json'
 import fireLovinLyrics from '@/assets/music/fire-lovin.elrc?raw'
+import fireLovinJSON from '@/assets/music/fire-lovin.json'
 import icuLyrics from '@/assets/music/icu.elrc?raw'
+import icuJSON from '@/assets/music/icu.json'
 
 import billie from '@/assets/music/what-was-i-made-for.mp3'
 import usher from '@/assets/music/on-the-side.mp3'
 import allIAsk from '@/assets/music/all-i-ask.mp3'
-import swv from '@/assets/music/swv.mp3'
 import fireLovin from '@/assets/music/fire-lovin.mp3'
 import icu from '@/assets/music/icu.mp3'
-import { Lrc } from 'lrc-kit'
-
-const processLyrics = (lyric) => {
-  const raw = formatLyrics(lyric)
-  let formatted = processElrc(raw)
-  const reformatted = processElrc2(lyric)
-
-  raw.lyrics[0].content = ` <00:01.0> ♫♫♫♫♫♫♫♫♫♫ <00:${formatted[1][0].time + 1 }>`
-  formatted = processElrc(raw)
-  return {
-    raw,
-    formatted,
-    reformatted
-  }
-}
-
-const formatLyrics = (lyrics) => {
-  const lrc = Lrc.parse(lyrics)
-  lrc.lyrics = [
-    { timestamp: 0.5001, content: ' <00:01.0> ♫♫♫♫♫♫♫♫♫♫ <00:11.00>' },
-    ...lrc.lyrics
-  ]
-  return lrc;
-}
 
 const convertTime = (time, prevTime) => {
   const first = time.replace('<', '').replace('>', '').replace('[', '').replace(']', '').split(':')
@@ -43,8 +22,8 @@ const convertTime = (time, prevTime) => {
   const ms = parseInt(first[1].split('.')[1])
 
   const minSec = (min * 60 + parseInt(sec)) * 1000
-  const onlyms =  minSec + parseInt(ms)
-  const timeUntilNext = onlyms/1000 - prevTime;
+  const onlyms = minSec + parseInt(ms)
+  const timeUntilNext = onlyms / 1000 - prevTime
 
   return {
     current: onlyms / 1000,
@@ -52,93 +31,90 @@ const convertTime = (time, prevTime) => {
   }
 }
 
-const processElrc2 = (lyric) => {
-  let prevTime = 0;
+const processLyrics = (rawElrc) => {
+  const lyricLibrary = convertElrcToLibrary(rawElrc)
+
+  return {
+    lyricDump : createLyricDump(lyricLibrary)
+  }
+}
+
+const convertElrcToLibrary = (lyric) => {
+  let prevTime = 0
   var splitted = lyric.split(/\s+/g).map((item) => {
-    if (item) return item;
-  });
+    if (item) return item
+  })
 
   let lineThings = []
   let lineArray = []
   let lyricData = null
   let lineStartTime = null
-  let lineIndex = -1
 
-  splitted.unshift('<00:11.000>')
-  splitted.unshift('♫♫♫♫♫♫♫♫♫♫')
-  splitted.unshift('<00:01.000>')
-  splitted.unshift(' ')
-  splitted.unshift('[00:00.000]')
+  // splitted.unshift('<00:11.000>')
+  // splitted.unshift('♫♫♫♫♫♫♫♫♫♫')
+  // splitted.unshift('<00:01.000>')
+  // splitted.unshift(' ')
+  // splitted.unshift('[00:00.000]')
 
   let counter = 0
 
-  splitted.forEach(text => {
+  splitted.forEach((text) => {
     if (text?.includes('[')) {
-      lineStartTime = convertTime(text).current
-      lineIndex++
-      if(lineArray.length) lineThings.push(lineArray)
+      const convertedStartTime = convertTime(text)
+      const aLittleEarlier = convertedStartTime.current - 0.1
+      lineStartTime = prevTime === 0 ? aLittleEarlier : convertedStartTime.current
+      prevTime = prevTime === 0 ? convertedStartTime.current : prevTime
+
+      let lyricHash2 = {
+        time: lineStartTime,
+        lyric: '[STARTOFLINE]',
+        lineIndex: lineThings.length ,
+        lyricIndex: counter,
+        timeUntilNext: null
+      }
+      lineArray.push(lyricHash2)
+      counter++
+
+      lineThings.push(lineArray)
       lineArray = []
     }
-    if(!text?.includes('<') && !text?.includes('[') && !!text) lyricData = text
+
+    if (!text?.includes('<') && !text?.includes('[') && !!text) lyricData = text
+
     if (text?.includes('<')) {
       const convertedTime = convertTime(text, prevTime)
 
       let lyricHash = {
-        time: convertedTime.current,
+        time: counter === 0 ? lineStartTime : prevTime,
         lyric: lyricData,
-        lineData: { time: lineStartTime },
-        timeUntilNext: convertedTime.timeUntilNext,
+        timeUntilNext: convertedTime.timeUntilNext
       }
 
       if (lineThings.length > 0) {
-        lyricHash.index = counter
-        lyricHash.lineData.index = lineThings.length - 1
-        counter++;
+        lyricHash.lyricIndex = counter
+        lyricHash.lineIndex = lineThings.length - 1
+        counter++
       }
 
       lineArray.push(lyricHash)
-
       prevTime = convertedTime.current
     }
   })
-  if(lineArray.length) lineThings.push(lineArray)
 
-  // const groupedTimes = Object.groupBy(lineThings, ({ lineData }) => lineData.time);
+  lineThings.push(lineArray)
 
   return lineThings
 }
 
-const processElrc = (parsedLrc) => {
-  let prevTime = 0;
-  return parsedLrc.lyrics.map((line) => line.content
-    .replaceAll('<', '')
-    .split('> ')
-    .map(lyric => {
-      const split = lyric.split(' ');
-      const minutes = split[1]?.replace('>', '').split(':')[0];
-      const seconds = split[1]?.replace('>', '').split(':')[1].split('.')[0];
-      const ms = split[1]?.replace('>', '').split('.')[1];
-
-      const minSec = (minutes * 60 + parseInt(seconds)) * 1000
-      const onlyms =  minSec + parseInt(ms)
-      const timeUntilNext = onlyms / 1000 - prevTime;
-
-
-      prevTime = onlyms / 1000
-
-      // console.log({
-      //   lyric: split[0],
-      //   time: onlyms/1000,
-      //   timeUntilNext: timeUntilNext
-      // })
-      
-      return {
-        lyric: split[0],
-        time: onlyms/1000,
-        timeUntilNext: timeUntilNext
-      }
+const createLyricDump = (lyrics) => {
+  const lyricDump = []
+  lyrics.forEach((line) => {
+    line.forEach((lyric) => {
+      lyricDump.push(lyric)
     })
-  )
+  })
+
+  return lyricDump
 }
 
 const songs = [
@@ -147,6 +123,7 @@ const songs = [
     artist: 'Billie Eillish',
     url: billie,
     lyrics: processLyrics(billieLyrics),
+    json: billieJSON,
     tempo: 79
   },
   {
@@ -154,6 +131,7 @@ const songs = [
     artist: 'Pleasure P',
     url: fireLovin,
     lyrics: processLyrics(fireLovinLyrics),
+    json: fireLovinJSON,
     tempo: 93
   },
   {
@@ -161,6 +139,7 @@ const songs = [
     artist: 'Coco Jones',
     url: icu,
     lyrics: processLyrics(icuLyrics),
+    json: icuJSON,
     tempo: 0
   },
   {
@@ -168,6 +147,7 @@ const songs = [
     artist: 'Adele',
     url: allIAsk,
     lyrics: processLyrics(allIAskLyrics),
+    json: allIAskJSON,
     tempo: 71
   },
   {
@@ -175,10 +155,11 @@ const songs = [
     artist: 'Usher',
     url: usher,
     lyrics: processLyrics(usherLyrics),
+    json: usherJSON,
     tempo: 94
   }
 ]
 
 export default {
   songs
-};
+}

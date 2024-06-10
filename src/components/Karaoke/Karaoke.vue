@@ -8,15 +8,14 @@
 
   // style it
   // save isSingleLyrics value as localstorage, set up to store other data in object
-  // just finished seperating toolbar, everything works
-  // toggle for edit mode
-  // hide all of the edit tools when toggle is false
   // make modified word a slightly different color
   // beeps for countdown
-  // add button to the right of toolbar to even it out
-  // create click to edit mode/ or space to edit
-  // make json file for lyrics instead of elrc
-
+  // save to lrc and save to elrc
+  // click word to change cursor position
+  // approximate lyric time for unfinished lyrics on save
+  // copy paste raw lyrics feature
+  // music player speed to slower or faster songs
+  // Player Styles
 
 </script>
 

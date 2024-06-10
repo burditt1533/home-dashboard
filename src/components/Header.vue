@@ -9,6 +9,7 @@ const isSidebarOpen = ref(false)
 const navLinks = ref([
   { label: 'Guest View', icon: 'ri-close-large-line', route: '/guest'},
   { label: 'Karaoke', icon: 'ri-close-large-line', route: '/karaoke'},
+  { label: 'Clean House', icon: 'ri-close-large-line', route: '/cleanHouse'},
 ])
 
 const toggleSidebar = () => {

@@ -7,45 +7,44 @@ export const karaoke = defineStore('karaoke', {
     currentSong: {},
     isSingleLyricLine: false,
     currentLyricTime: 0,
-    currentLineIndex: 0,
     currentWordIndex: 0,
-    runner: {},
-    runnerOffset: 300,
+    runnerOffset: 0,
     countdownNumber: 4,
-    parsedElrc: [],
     isEditMode: true
   }),
   getters: {
-    currentSongLyrics(state) {
-      return state.currentSong.lyrics.reformatted
+    groupedLyrics () {
+      return Object.groupBy(this.currentSongLyrics, ({ lineIndex }) => lineIndex) || []
     },
-    previousLineIndex(state) {
-      return state.currentLineIndex === 0 ? state.currentLineIndex : state.currentLineIndex - 1
+    currentSongLyrics() {
+      return this.currentSong?.json || []
+    },
+    previousLineIndex() {
+      return this.currentLineIndex === 0 ? this.currentLineIndex : this.currentLineIndex - 1
+    },
+    currentLineIndex () {
+      return this.currentLyric.lineIndex || 0
+    },
+    nextLineIndex() {
+      return this.currentLineIndex + 1
     },
     previousLine() {
-      return this.currentSongLyrics[this.previousLineIndex]
+      return this.groupedLyrics[this.previousLineIndex]
     },
-    nextLineIndex(state) {
-      return state.currentLineIndex + 1
-    },
-    currentLine(state) {
-      return this.currentSongLyrics[state.currentLineIndex]
+    currentLine() {
+      return this.groupedLyrics[this.currentLineIndex] || []
     },
     nextLine() {
-      return this.currentSongLyrics[this.nextLineIndex] || []
+      return this.groupedLyrics[this.nextLineIndex] || []
     },
-    currentWord(state) {
-      return this.currentLine[state.currentWordIndex] || {}
+    previousLyric() {
+      return this.currentSongLyrics[this.currentWordIndex - 2] || {}
     },
-    previousWord(state) {
-      const isFirstWord = state.currentWordIndex === 0
-      const lastWordOfNextLine = this.previousLine[this.previousLine.length - 1] || {}
-      return isFirstWord ? lastWordOfNextLine : this.currentLine[state.currentWordIndex - 1] || {}
+    currentLyric() {
+      return this.currentSongLyrics[this.currentWordIndex - 1] || {}
     },
-    nextWord(state) {
-      const isLastWord = state.currentWordIndex === this.currentLine.length - 1
-      const firstWordOfNextLine = this.nextLine[0] || {}
-      return isLastWord ? firstWordOfNextLine : this.currentLine[state.currentWordIndex + 1] || {}
+    nextLyric() {
+      return this.currentSongLyrics[this.currentWordIndex] || {}
     }
   },
   actions: {
@@ -57,8 +56,11 @@ export const karaoke = defineStore('karaoke', {
       this.musicPlayer.currentTime = time
 
       this.musicPlayer.play()
-
-      // karaokeStore.set('runner', new Runner(karaokeStore.currentSong.lyrics.raw))
+    },
+    getCurrentWordIndex () {
+      if (this.currentLyricTime > this.nextLyric?.time) {
+        this.currentWordIndex ++;
+      }
     }
   }
 })

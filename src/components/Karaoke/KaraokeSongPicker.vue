@@ -1,22 +1,19 @@
 <script setup>
 import { computed, ref, onMounted, watch } from 'vue'
 import KData from './index.js'
-import { Runner } from 'lrc-kit'
 import { karaoke } from '@/stores/karaoke'
 
 const karaokeStore = karaoke()
 
 const selectSong = (song) => {
   karaokeStore.set('currentSong', song)
-  karaokeStore.set('parsedElrc', karaokeStore.currentSong.lyrics.formatted)
-  karaokeStore.set('runner', new Runner(karaokeStore.currentSong.lyrics.raw))
   resetKaraoke()
 }
 
 const resetKaraoke = () => {
-  document.querySelector('.lyric-container').scrollTo(0, 0)
+  // document.querySelector('.lyric-container').scrollTo(0, 0)
   karaokeStore.set('currentLyricTime', 0)
-  karaokeStore.set('currentLineIndex', -1)
+  karaokeStore.set('currentWordIndex', 0)
   karaokeStore.set('countdownNumber', 4)
 }
 

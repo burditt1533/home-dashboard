@@ -7,33 +7,14 @@
 
   const karaokeStore = karaoke()
   const karaokeToolbarStore = karaokeToolbar()
-  const prevLineIndex = ref(0)
-  const isForceCurrentIndex = ref(true)
 
-  watch(
-    () => karaokeStore.currentLyricTime,
-    () => {
-      const params = {
-        currentLineIndex: karaokeStore.currentLineIndex,
-        prevLineIndex: prevLineIndex.value,
-        currentSongTime: karaokeStore.currentLyricTime,
-        parsedElrc: displayedLyrics.value,
-        currentWordIndex: karaokeStore.currentWordIndex,
-        isForceCurrentIndex: isForceCurrentIndex.value
-      }
-      prevLineIndex.value = karaokeStore.currentLineIndex
-      karaokeStore.set('currentWordIndex', getCurrentWordIndex.init(params))
-      isForceCurrentIndex.value = false
-    }
-  )
-
-  const displayedLyrics = computed(() => {
-    return karaokeStore.currentSong.lyrics.reformatted
+  watch(() => karaokeStore.currentLyricTime, () => {
+    karaokeStore.getCurrentWordIndex()
   })
 
-  const formattedLyrics = computed(() => {
-    const lyricLine = displayedLyrics.value[karaokeStore.currentLineIndex] || []
-    return karaokeStore.isSingleLyricLine ? [lyricLine] : displayedLyrics.value
+  const displayLyrics = computed(() => {
+    const lyricLine = karaokeStore.groupedLyrics[karaokeStore.currentLineIndex] || []
+    return karaokeStore.isSingleLyricLine ? [lyricLine] : karaokeStore.groupedLyrics
   })
 
   const isMusicStarted = computed(() => {
@@ -45,8 +26,7 @@
   })
 
   const goToCurrentLyric = (newLineIndex) => {
-    karaokeStore.set('currentLineIndex', newLineIndex)
-    if (karaokeStore.isEditMode) {
+    if (!karaokeStore.isEditMode) {
       currentLyricElement.value?.scrollIntoView({
         behavior: 'smooth',
         block: 'center',
@@ -55,14 +35,10 @@
     }
   }
 
-  const selectModifiedLyric = (lineIndex, wordIndex, isModifyStartTime) => {
+  const selectModifiedLyric = (lyric) => {
     const kts = karaokeToolbarStore
-    isForceCurrentIndex.value = true
-    kts.set('currentModifiedLineIndex', lineIndex)
-    kts.set('currentModifiedLyricIndex', wordIndex)
-    kts.set('isModifyStartTime', isModifyStartTime)
-    karaokeStore.set('currentLineIndex', lineIndex)
-    karaokeStore.set('currentWordIndex', wordIndex)
+    kts.set('currentModifiedLyricIndex', lyric.lyricIndex)
+    karaokeStore.set('currentWordIndex', lyric.lyricIndex)
 
     karaokeStore.setPlaybackPosition(kts.lyricToHear)
   }
@@ -74,45 +50,38 @@
       <div v-if="!karaokeStore.currentSong.name" class="music-info">Choose A Song</div>
       <template v-else-if="isMusicStarted">
         <div
-          v-for="(line, lineIndex) in formattedLyrics"
+          v-for="(line, lineIndex) in displayLyrics"
           :key="line.time"
           :class="[
             'lyric-wrap',
             {
-              current: lineIndex === karaokeStore.currentLineIndex || karaokeStore.isSingleLyricLine
+              current: parseInt(lineIndex) === karaokeStore.currentLineIndex || karaokeStore.isSingleLyricLine
             },
             { editMode: karaokeStore.isEditMode }
           ]"
           :id="'lyric-' + lineIndex"
         >
           <span
-            v-if="karaokeStore.isEditMode"
-            class="smaller"
-            @click="selectModifiedLyric(lineIndex, 0, true)"
-          >
-            {{ line[0].lineData.time?.toFixed(3) }}
-          </span>
-
-          <span
             v-for="(word, wordIndex) in line"
             :key="wordIndex"
             :style="{ transitionDuration: karaokeStore.isEditMode ? 0 : `${word.timeUntilNext}s` }"
             :class="[
               'lyric',
-              {
-                highlight:
-                  `${lineIndex}-${wordIndex}` ===
-                  `${karaokeStore.isSingleLyricLine ? 0 : karaokeStore.currentLineIndex}-${karaokeStore.currentWordIndex}`
-              },
-              { modifiying: word.time === karaokeToolbarStore.currentModifiedLyric.time }
+              { highlight: word.lyricIndex === karaokeStore.currentWordIndex - 1 && !karaokeToolbarStore.isClickEditMode },
+              { modifiying: word.time === karaokeToolbarStore.currentModifiedLyric.time  },
+              { cursorEdit: word.lyricIndex === karaokeToolbarStore.editCursor && karaokeToolbarStore.isClickEditMode},
             ]"
-            @click="selectModifiedLyric(lineIndex, wordIndex, false)"
+            @click="selectModifiedLyric(word)"
           >
-            <div class="stacked-lyric">
+            <div v-if="word.lyric !== '[STARTOFLINE]' || karaokeStore.isEditMode" class="stacked-lyric">
               <span>{{ word.lyric + ' ' }}</span>
-              <span :class="['smaller', { modified: karaokeToolbarStore.modifiedLyrics.includes(word) }]">{{
-                word.time.toFixed(3)
-              }}</span>
+              <span v-if='karaokeStore.isEditMode' :class="[
+                  'smaller',
+                  { modified: karaokeToolbarStore.modifiedLyrics.includes(word) }
+                ]"
+              >
+                {{ word.time.toFixed(3)}}
+              </span>
             </div>
           </span>
         </div>
@@ -129,7 +98,7 @@
     </div>
   </div>
 
-  <KaraokeEditToolbar> </KaraokeEditToolbar>
+  <KaraokeEditToolbar v-if='karaokeStore.isEditMode'> </KaraokeEditToolbar>
 </template>
 
 <style lang="scss">
@@ -188,6 +157,11 @@
 
       &.modifiying {
         color: orange;
+        transition-duration: 0ms !important;
+      }
+
+      &.cursorEdit {
+        color: #0ea5e9;
         transition-duration: 0ms !important;
       }
     }

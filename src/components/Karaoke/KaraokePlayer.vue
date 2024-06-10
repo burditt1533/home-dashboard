@@ -2,50 +2,46 @@
 import { computed, ref, onMounted, watch } from 'vue'
 import InputSwitch from 'primevue/inputswitch'
 import InputNumber from 'primevue/inputnumber'
-import Button from 'primevue/button'
 import AudioPlayer from '@liripeng/vue-audio-player'
 import { karaoke } from '@/stores/karaoke'
+import { storeToRefs } from "pinia";
 
 const karaokeStore = karaoke()
-const runnerOffset = ref(300)
+const { runnerOffset } = storeToRefs(karaokeStore);
 const isSingleLyricLine = ref(false)
 const audioPlayerRef = ref(null)
+
+watch(() => karaokeStore.currentLineIndex, () => {
+  goToCurrentLyric()
+})
 
 const currentLyricElement = computed(() => {
   return document.getElementById('lyric-' + karaokeStore.currentLineIndex)
 })
 
 const goToCurrentLyric = () => {
-  karaokeStore.set('currentLineIndex', karaokeStore.runner.curIndex())
-  // currentLyricElement.value?.scrollIntoView({
-  //   behavior: 'smooth',
-  //   block: 'center',
-  //   inline: 'center'
-  // })
-}
-
-const timeUpdate = (e) => {
-  // console.log(e.srcElement.currentTime, karaokeStore.musicPlayer.currentTime)
-  // console.log(karaokeStore.musicPlayer.currentTime)
-  karaokeStore.set(
-    'currentLyricTime',
-    // karaokeStore.musicPlayer.currentTime + karaokeStore.runnerOffset / 1000
-    e.srcElement.currentTime + karaokeStore.runnerOffset / 1000
-  )
-  karaokeStore.runner.timeUpdate(karaokeStore.currentLyricTime)
-
-  if (karaokeStore.runner.curIndex() >= karaokeStore.currentLineIndex) {
-    goToCurrentLyric()
+  if (!karaokeStore.isEditMode) {
+    currentLyricElement.value?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+      inline: 'center'
+    })
   }
 }
 
+const timeUpdate = (e) => {
+  karaokeStore.set(
+    'currentLyricTime',
+    e.srcElement.currentTime + karaokeStore.runnerOffset / 1000
+  )
+}
+
 const progressMove = (e) => {
-  // karaokeStore.musicPlayer.pause()
   karaokeStore.set(
     'currentLyricTime',
     karaokeStore.musicPlayer.currentTime + karaokeStore.runnerOffset / 1000
   )
-  karaokeStore.runner.timeUpdate(karaokeStore.currentLyricTime)
+
   goToCurrentLyric()
 }
 
@@ -66,12 +62,10 @@ const startCoundown = (next) => {
 }
 
 const audioList = computed(() => {
-  return [
-    {
-      name: 'audio1',
-      url: karaokeStore.currentSong.url
-    }
-  ]
+  return [{
+    name: 'audio1',
+    url: karaokeStore.currentSong.url
+  }]
 })
 
 const onOffsetChange = () => {

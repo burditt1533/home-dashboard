@@ -2,32 +2,20 @@
 import { computed, ref, onMounted, watch } from 'vue'
 import Toolbar from 'primevue/toolbar'
 import Button from 'primevue/button'
-import { Runner } from 'lrc-kit'
 import Knob from 'primevue/knob'
 import { karaoke } from '@/stores/karaoke'
 import { karaokeToolbar } from '@/stores/karaokeToolbar'
+import { storeToRefs } from "pinia";
 
 const karaokeStore = karaoke()
 const karaokeToolbarStore = karaokeToolbar()
 
-const currentWordIndex = ref(0)
-const prevLineIndex = ref(0)
-const prevCurrentTime = ref(-1)
-const lyricModifierModal = ref(null)
-const currentModifiedLyric = ref(0)
-const currentModifiedLine = ref(0)
-const currentModifiedLineIndex = ref(0)
-const modifiedLyricToHear = ref(0)
+const { isClickEditMode } = storeToRefs(karaokeToolbarStore);
+
 const sliderValue = ref(0)
 const isForceCurrentIndex = ref(true)
-const isModifyStartTime = ref(false)
-const isClickEditMode = ref(false)
+// const isClickEditMode = ref(false)
 const editCursor = ref(0)
-const editLineCursor = ref(0)
-
-const displayedLyrics = computed(() => {
-  return karaokeStore.currentSong.lyrics.reformatted
-})
 
 const toTimer = (time, withHours) => {
   var h, m, s, ms
@@ -42,46 +30,42 @@ const toTimer = (time, withHours) => {
   return withHours ? h + ':' + m + ':' + s : m + ':' + s + '.' + ms
 }
 
-const updateLyricTime = (property, lyricTime) => {
+const handleSaveClick = (lyricTime) => {
   const kts = karaokeToolbarStore
-  const oldTime = property === 'lineData' ?  kts.currentModifiedLyric.lineData.time : kts.currentModifiedLyric.time
-  const newTime = lyricTime || oldTime + sliderValue.value
+  const newTime = lyricTime || kts.currentModifiedLyric.time + sliderValue.value
 
-  kts.isModifyStartTime ? kts.updateLineStartTime(newTime) : kts.updateLyricTime(newTime)
+  kts.updateLyricTime(newTime)
 
-  updateElrcFile()
+  // convertToElrc()
+  convertToJson()
   resetModifiers()
 }
 
-const handleSaveClick = () => {
-  const property = karaokeToolbarStore.isModifyStartTime ? 'lineData' : 'time'
-  updateLyricTime(property)
-}
-
-
-const updateElrcFile = async () => {
+const convertToElrc = async () => {
+  // TODO: need to accomodate moving the times forwards
   let sheet = ''
-
-  displayedLyrics.value.forEach((line, index) => {
-    if (index === 0) return
-    sheet += '\n[' + toTimer(line[0].lineData.time) + '] '
-
-    line.forEach((lyric) => {
-      sheet += `${lyric.lyric} <${toTimer(lyric.time)}> `
+  karaokeStore.groupedLyrics.forEach((line, index) => {
+    line.forEach((lyric, index) => {
+      if (lyric.lyric === '[STARTOFLINE]') {
+        sheet += '\n[' + toTimer(lyric.time) + '] '
+      } else {
+        sheet += `${lyric.lyric} <${toTimer(lyric.time)}> `
+      }
     })
-
-    sheet += '\n'
   })
-  // console.log(sheet)
 
   navigator.clipboard.writeText(sheet)
 }
 
+const convertToJson = async () => {
+  const json = JSON.stringify(karaokeStore.currentSongLyrics)
+  navigator.clipboard.writeText(json)
+}
+
 const resetModifiers = () => {
-  currentModifiedLyric.value = null
-  modifiedLyricToHear.value = null
-  isModifyStartTime.value = false
+  karaokeToolbarStore.set('currentModifiedLyricIndex', -1)
   sliderValue.value = 0
+  karaokeToolbarStore.set('modifySliderTime', sliderValue.value)
 }
 
 const updateSliderValue = (amount) => {
@@ -92,53 +76,32 @@ const updateSliderValue = (amount) => {
 }
 
 const runItBack = () => {
-  // const kts = karaokeToolbarStore
-  // const lyric = karaokeToolbarStore.isModifyStartTime ? kts.previousModifiedLyric : kts.currentModifiedLyric
-
   karaokeStore.setPlaybackPosition(karaokeToolbarStore.lyricToHear + sliderValue.value)
 }
 
 const logIt = () => {
-  // const time = karaokeStore.musicPlayer.currentTime
-  // updateLyricTime(time)
-  // console.log(time)
-  // console.log(karaokeStore.currentSong.lyrics.reformatted)
-
-  // let theLyric = null
-  // karaokeStore.currentSong.lyrics.reformatted.some((line) => {
-  //   return theLyric = line.find(({ index }) => index === editCursor.value)
-  // })
-
-  // karaokeToolbarStore.updateCursorLyricTime(theLyric)
-  // editCursor.value++
-
-  // let isLyricFound = false
-  // karaokeStore.currentSong.lyrics.reformatted.forEach((line) => {
-
-  //   line.forEach(lyric => {
-  //     if(lyric.index === editCursor.value) {
-  //       karaokeToolbarStore.updateCursorLyricTime(lyric, karaokeStore.musicPlayer.currentTime)
-  //       isLyricFound = true
-  //     }
-  //   })
-  // })
-  // editCursor.value++
-
-  const lyricDump = []
-  karaokeStore.currentSong.lyrics.reformatted.forEach((line, index) => {
-    if (index > 0) {
-      line.forEach(lyric => {
-        lyricDump.push(lyric)
-      })
-    }
-  })
-  console.log(lyricDump);
-
-  //edit just line start time
-
-  // karaokeToolbarStore.updateCursorLineTime(editLineCursor.value)
-  // editLineCursor.value++
+  if (isClickEditMode.value) {
+    let lyricToEdit = karaokeStore.currentSongLyrics.find(({ lyricIndex }) => {
+      return lyricIndex === karaokeToolbarStore.editCursor
+    })
+    karaokeToolbarStore.updateCursorLyricTime(lyricToEdit, karaokeStore.musicPlayer.currentTime)
+  }
 }
+
+const knobValueTemplate = (value) => {
+  return (karaokeToolbarStore.currentModifiedLyric?.time + value).toFixed(3)
+}
+
+const handleKeyboardInput = (e) => {
+  if (e.code === 'Space') {
+    e.preventDefault();
+    logIt()
+  }
+}
+
+onMounted(() => {
+  document.addEventListener("keydown", handleKeyboardInput);
+})
 </script>
 
 <template>
@@ -151,7 +114,7 @@ const logIt = () => {
     }"
   >
     <template #start>
-      {{ karaokeToolbarStore.currentModifiedLyric?.lyric }} - 
+      {{ karaokeToolbarStore.currentModifiedLyric?.lyric }} -
       {{ karaokeToolbarStore.currentModifiedLyric?.time }}
     </template>
 
@@ -174,14 +137,7 @@ const logIt = () => {
         :strokeWidth="5"
         readonly
         @click="runItBack"
-        :valueTemplate="
-          (value) => {
-            const t = karaokeToolbarStore.isModifyStartTime
-              ? karaokeToolbarStore.currentModifiedLyric?.lineData.time
-              : karaokeToolbarStore.currentModifiedLyric?.time
-            return (t + value).toFixed(3)
-          }
-        "
+        :valueTemplate="knobValueTemplate"
       />
       <Button
         @click="updateSliderValue(0.05)"
@@ -189,11 +145,7 @@ const logIt = () => {
         class="mr-2"
         severity="secondary"
       />
-      <Button
-        @click="handleSaveClick"
-        icon="ri-save-line"
-        severity="secondary"
-      />
+      <Button @click="handleSaveClick" icon="ri-save-line" severity="secondary" />
       <Button
         @click="isClickEditMode = !isClickEditMode"
         icon="ri-edit-2-line"
