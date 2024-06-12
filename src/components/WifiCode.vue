@@ -32,11 +32,11 @@ onMounted(async () => {})
       <h1 class="wifi-header">Wifi <i class="ri-wifi-line" /></h1>
 
       <div class="wifi-info">
-        <h4>Network:</h4>
+        <h4 class='wifi-title'>Network:</h4>
         <div class="wifi-textbox">TheBurdnest</div>
       </div>
       <div class="wifi-info">
-        <h4>Password:</h4>
+        <h4 class='wifi-title'>Password:</h4>
         <div class="wifi-textbox">09171810#</div>
       </div>
     </div>
@@ -79,6 +79,9 @@ onMounted(async () => {})
       margin-bottom: 13px;
       display: flex;
       font-size: 20px;
+      .wifi-title {
+        margin: 0;
+      }
       .wifi-textbox {
         padding-left: 10px;
       }

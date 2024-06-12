@@ -4,60 +4,165 @@ import Button from 'primevue/button'
 import Card from 'primevue/card'
 import Checkbox from 'primevue/checkbox';
 import Rating from 'primevue/rating';
+import Menu from 'primevue/menu';
 import { cleanHouse } from '@/stores/cleanHouse'
+import { storeToRefs } from "pinia";
 
 const cleanHouseStore = cleanHouse()
-const completedTasks = ref()
-const ratings = ref(3)
+const updatingTaskId = ref(null)
+const menu = ref();
 
-const numberOfStars = (room) => {
-  const completedTasks = room.tasks
-    .filter((task) => task.isComplete)
-    .map((task) => task.level)
-  return 
+const toggleMenu = (event, roomId) => {
+  const element = menu.value.find(thing => thing.id === `overlay-${roomId}`)
+  element.toggle(event);
+};
+
+const toggleCheckbox = async (task) => {
+  updatingTaskId.value = task.id
+  let response = await fetch(`http://127.0.0.1:3000/tasks/${ task.id }.json`, { 
+    method: 'PUT', 
+    headers: { 
+      'Content-type': 'application/json'
+    }, 
+    body: JSON.stringify({
+      date_completed: !task.is_complete ? new Date().toISOString() : null,
+      is_complete: !task.is_complete,
+    }) 
+  }); 
+  response = await response.json()
+
+  updatingTaskId.value = null
+  cleanHouseStore.updateLocalTask(response)
 }
 
-onMounted(() => {
-  // console.log(cleanHouseStore.rooms)
+const roomRating = (room) => {
+  const group = room.taskGroups[room.cleanLevel + 1] || []
+  const completedLength = group.filter(task => task.is_complete).length
+  const percentCompleted = completedLength / (group.length || 1)
+  return room.cleanLevel * 20 + (percentCompleted * 20)
+}
+
+const setRoomGoal = async (room, goalLevel) => {
+  let response = await fetch(`http://127.0.0.1:3000/rooms/${ room.id }.json`, { 
+    method: 'PUT', 
+    headers: { 
+      'Content-type': 'application/json'
+    }, 
+    body: JSON.stringify({
+      goal_level: goalLevel
+    }) 
+  }); 
+  response = await response.json()
+  cleanHouseStore.updateLocalRoom(room, goalLevel)
+}
+
+const timeSince = (date) => {
+  const taskDate = new Date(date)
+  var seconds = Math.floor((new Date() - taskDate) / 1000);
+  var interval = seconds / 31536000;
+  if(!date) return ''
+
+  if (interval > 1) {
+    return Math.floor(interval) + " years";
+  }
+  interval = seconds / 2592000;
+  if (interval > 1) {
+    return Math.floor(interval) + " months";
+  }
+  interval = seconds / 86400;
+  if (interval > 1) {
+    return Math.floor(interval) + " days";
+  }
+  interval = seconds / 3600;
+  if (interval > 1) {
+    return Math.floor(interval) + " hours";
+  }
+  interval = seconds / 60;
+  if (interval > 1) {
+    return Math.floor(interval) + " minutes";
+  }
+  return Math.floor(seconds) + " seconds";
+}
+
+onMounted(async () => {
+  let response = await fetch('http://127.0.0.1:3000/rooms')
+  response = await response.json()
+  cleanHouseStore.addRoomsAndTasks(response)
 })
 </script>
 
 <template>
   <div class='clean-house-container'>
-
     <div class="rooms-container">
-      <Card v-for='room in cleanHouseStore.roomGroupedTasks' :key='room.name' class='room'>
+      <Card v-for='room in cleanHouseStore.roomGroupedTasks' :key='room.id' :id='room.id' class='room'>
+        
         <template #header>
+          <div class="menu-container">
+            <Button
+              class='menu-button'
+              type="button"
+              icon="ri-more-2-line"
+              @click="(event) => toggleMenu(event, room.id)"
+              text
+              aria-haspopup="true"
+              aria-controls="overlay_menu"
+            />
+            <Menu ref="menu" :id="`overlay-${room.id}`" :model="[{
+              label: `Room ${room.id}`,
+              items: [
+                { label: '★', command: () => { setRoomGoal(room, 1) } },
+                { label: '★★', command: () => { setRoomGoal(room, 2) } },
+                { label: '★★★', command: () => { setRoomGoal(room, 3) } },
+                { label: '★★★★', command: () => { setRoomGoal(room, 4) } },
+                { label: '★★★★★', command: () => { setRoomGoal(room, 5) } }
+              ]
+            }]" :popup="true" />
+          </div>
           <img class='room-image' src="https://maidsailors.com/wp-content/uploads/2019/10/Why-You-Need-a-Clean-Bedroom-Maid-Sailors.jpg" />
+
         </template>
-        <template #title>{{ room.name }}</template>
+        <template #title><div class="room-name">{{ room.name }}</div></template>
         <template #subtitle>
-          <div class="room-rating-container">
-            <div v-for="starIndex in 5" :key="starIndex" class="room-star">
-              <svg v-if='starIndex <= room.cleanLevel' width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" class="p-icon p-rating-icon" aria-hidden="true" data-pc-section="onicon">
-                <path 
-                  d="M13.9718 5.36453C13.9398 5.26298 13.8798 5.17252 13.7986 5.10356C13.7175 5.0346 13.6186 4.98994 13.5132 4.97472L9.37043 4.37088L7.51307 0.617955C7.46021 0.529271 7.38522 0.455834 7.29545 0.404836C7.20568 0.353838 7.1042 0.327026 7.00096 0.327026C6.89771 0.327026 6.79624 0.353838 6.70647 0.404836C6.6167 0.455834 6.54171 0.529271 6.48885 0.617955L4.63149 4.37088L0.488746 4.97472C0.383363 4.98994 0.284416 5.0346 0.203286 5.10356C0.122157 5.17252 0.0621407 5.26298 0.03014 5.36453C-0.00402286 5.46571 -0.00924428 5.57442 0.0150645 5.67841C0.0393733 5.7824 0.0922457 5.87753 0.167722 5.95308L3.17924 8.87287L2.4684 13.0003C2.45038 13.1066 2.46229 13.2158 2.50278 13.3157C2.54328 13.4156 2.61077 13.5022 2.6977 13.5659C2.78477 13.628 2.88746 13.6644 2.99416 13.6712C3.10087 13.678 3.20733 13.6547 3.30153 13.6042L7.00096 11.6551L10.708 13.6042C10.79 13.6491 10.882 13.6728 10.9755 13.673C11.0958 13.6716 11.2129 13.6343 11.3119 13.5659C11.3988 13.5022 11.4663 13.4156 11.5068 13.3157C11.5473 13.2158 11.5592 13.1066 11.5412 13.0003L10.8227 8.87287L13.8266 5.95308C13.9033 5.87835 13.9577 5.7836 13.9833 5.67957C14.009 5.57554 14.005 5.4664 13.9718 5.36453Z"
-                  fill="green"
-                >
-                </path>
-              </svg>
-              <svg v-else width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" class="p-icon p-rating-icon" aria-hidden="true" data-pc-section="officon">
-                <path
-                  d="M10.9741 13.6721C10.8806 13.6719 10.7886 13.6483 10.7066 13.6033L7.00002 11.6545L3.29345 13.6033C3.19926 13.6539 3.09281 13.6771 2.98612 13.6703C2.87943 13.6636 2.77676 13.6271 2.6897 13.5651C2.60277 13.5014 2.53529 13.4147 2.4948 13.3148C2.45431 13.215 2.44241 13.1058 2.46042 12.9995L3.17881 8.87264L0.167699 5.95324C0.0922333 5.8777 0.039368 5.78258 0.0150625 5.67861C-0.00924303 5.57463 -0.00402231 5.46594 0.030136 5.36477C0.0621323 5.26323 0.122141 5.17278 0.203259 5.10383C0.284377 5.03488 0.383311 4.99023 0.488681 4.97501L4.63087 4.37126L6.48797 0.618832C6.54083 0.530159 6.61581 0.456732 6.70556 0.405741C6.79532 0.35475 6.89678 0.327942 7.00002 0.327942C7.10325 0.327942 7.20471 0.35475 7.29447 0.405741C7.38422 0.456732 7.4592 0.530159 7.51206 0.618832L9.36916 4.37126L13.5114 4.97501C13.6167 4.99023 13.7157 5.03488 13.7968 5.10383C13.8779 5.17278 13.9379 5.26323 13.9699 5.36477C14.0041 5.46594 14.0093 5.57463 13.985 5.67861C13.9607 5.78258 13.9078 5.8777 13.8323 5.95324L10.8212 8.87264L11.532 12.9995C11.55 13.1058 11.5381 13.215 11.4976 13.3148C11.4571 13.4147 11.3896 13.5014 11.3027 13.5651C11.2059 13.632 11.0917 13.6692 10.9741 13.6721ZM7.00002 10.4393C7.09251 10.4404 7.18371 10.4613 7.2675 10.5005L10.2098 12.029L9.65193 8.75036C9.6368 8.6584 9.64343 8.56418 9.6713 8.47526C9.69918 8.38633 9.74751 8.30518 9.81242 8.23832L12.1969 5.94559L8.90298 5.45648C8.81188 5.44198 8.72555 5.406 8.65113 5.35152C8.57671 5.29703 8.51633 5.2256 8.475 5.14314L7.00002 2.1626L5.52503 5.15078C5.4837 5.23324 5.42332 5.30467 5.3489 5.35916C5.27448 5.41365 5.18815 5.44963 5.09705 5.46412L1.80318 5.94559L4.18761 8.23832C4.25252 8.30518 4.30085 8.38633 4.32873 8.47526C4.3566 8.56418 4.36323 8.6584 4.3481 8.75036L3.7902 12.0519L6.73253 10.5234C6.81451 10.4762 6.9058 10.4475 7.00002 10.4393Z"
-                  fill="green"
-                >
-                </path>
-              </svg>
-            </div>
+          <div class="room-rating-container" :style='{ backgroundImage: `linear-gradient(to right, #10b981 ${ room.rating }%, white 0%)` }'>
+            <span
+              v-for="starIndex in 5"
+              :key="starIndex"
+              @click='setRoomGoal(room, starIndex)'
+              class='room-star'
+            >
+              ★
+            </span>
           </div>
         </template>
         <template #content>
           <div class="room-checklist">
-            <div v-for="(taskGroup, index) of room.taskGroups" :key="index" class="room-taskgroup">
-                <h2 class='level-heading'>Level {{ index }}</h2> 
-              <div v-for="task of taskGroup" :key="task" class="room-task">
-                <Checkbox v-model="completedTasks" :inputId="task.name" name="task.name" :value="task.name" :checked='task.isChecked' />
-                <label :for="task.name">{{ task.name }}</label>
+            <div
+              v-for="(taskGroup, index) of room.taskGroups"
+              :key="index"
+              :class="['room-taskgroup', { notInGoal: index > room.goal_level }]"
+            >
+              <h4 class='level-heading' @click='setRoomGoal(room, index)'>Level {{ index }}</h4>
+              <div
+                v-for="task of taskGroup"
+                :key="task.id"
+                :class="['room-task', { updating: updatingTaskId === task.id }]"
+              >
+                <Checkbox
+                  v-model="room.completedTasks"
+                  :inputId="task.id"
+                  :name="task.name"
+                  :value="task.id"
+                  @update:modelValue='toggleCheckbox(task)'
+                  :pt="{
+                    box: 'check-box',
+                    root: 'check-root',
+                    icon: 'check-icon',
+                  }"
+                />
+                <label class='task-label' :for="task.id">
+                  {{ task.name }} 
+                  <div v-if='task.date_completed' class="time-ago">{{ timeSince(task.date_completed) }} ago</div>
+                </label>
               </div>
               <hr/>
             </div>
@@ -71,11 +176,22 @@ onMounted(() => {
         </template> -->
       </Card>
     </div>
+    <div
+      class="house-rating-container"
 
+    >
+      <div class="house-rating"
+        :style='{
+          backgroundImage: `linear-gradient(to right, #10b981 ${ cleanHouseStore.houseRating }%, transparent 0%)`
+        }'
+      >
+        <span v-for="starIndex in 5" :key="starIndex" class='house-star'>★</span>
+      </div>
+    </div>
   </div>
 </template>
 
-<style scoped lang="scss">
+<style lang="scss">
 .clean-house-container {
   .rooms-container {
     overflow-x: scroll;
@@ -85,6 +201,27 @@ onMounted(() => {
     .room {
       min-width: 25rem;
       overflow: hidden;
+      position: relative;
+
+      .menu-container {
+        position: absolute;
+        right: 0;
+
+        .menu-button {
+          color: white;
+          font-size: 30px;
+          text-shadow: 0px 1px 3px black;
+
+          &:focus, &:hover {
+            background: none;
+          }
+        }
+      }
+
+      .room-name {
+        font-size: 20px;
+        font-weight: 700;
+      }
   
       .room-image {
         height: 210px;
@@ -97,9 +234,8 @@ onMounted(() => {
         overflow-y: scroll;
 
         .level-heading {
-          font-weight: 700;
-          font-size: 20px;
-          margin-bottom: 3px;
+          cursor: pointer;
+          margin: 0;
         }
 
         .room-taskgroup {
@@ -107,17 +243,95 @@ onMounted(() => {
           flex-direction: column;
           gap: 10px;
 
+          &.notInGoal {
+            opacity: 0.2;
+          }
+
           .room-task {
             display: flex;
-            gap: 20px;
+            align-items: center;
+            margin-bottom: 15px;
+
+            .check-box {
+              border-radius: 50%;
+              width: 45px;
+              height: 45px;
+              transition: none;
+            }
+
+            .check-root {
+              width: 45px;
+              height: 45px;
+            }
+
+            .check-icon {
+              width: 20px;
+              height: 20px;
+            }
+
+            .task-label {
+              width: 100%;
+              padding: 14px;
+              cursor: pointer;
+              display: flex;
+              flex-direction: column;
+
+              .time-ago {
+                color: rgb(174, 174, 174);
+                font-size: 11px;
+              }
+            }
+
+            &.updating:after {
+              overflow: hidden;
+              display: inline-block;
+              vertical-align: bottom;
+              animation: ellipsis steps(4, end) 1100ms infinite;
+              content: '\2026'; /* ascii code for the ellipsis character */
+              width: 0px;
+            }
+
+            @keyframes ellipsis {
+              to {
+                width: 1.25em;
+              }
+            }
           }
         }
-  
-  
       }
       .room-rating-container {
         display: flex;
         gap: 4px;
+        background-size: 33.5%;
+        background-clip: text;
+        background-repeat: no-repeat;
+
+        .room-star {
+          -webkit-text-stroke: 1px #10b981;
+          color: transparent;
+          font-size: 20px;
+          cursor: pointer;
+        }
+      }
+    }
+  }
+
+  .house-rating-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+
+    .house-rating {
+      display: inline-flex;
+      gap: 4px;
+      justify-content: center;
+      background-clip: text;
+      background-repeat: no-repeat;
+
+      .house-star {
+        -webkit-text-stroke: 1px #10b981;
+        color: transparent;
+        font-size: 40px;
       }
     }
   }

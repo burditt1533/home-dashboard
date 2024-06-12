@@ -182,7 +182,7 @@ onUnmounted(() => {
       width: 100%;
       background: $dash-c-card-bg;
       position: absolute;
-      bottom: 31px;
+      bottom: 54px;
       font-size: 10px;
       text-align: center;
     }
