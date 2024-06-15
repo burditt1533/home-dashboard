@@ -10,7 +10,7 @@ export const karaoke = defineStore('karaoke', {
     currentWordIndex: 0,
     runnerOffset: 0,
     countdownNumber: 4,
-    isEditMode: true
+    isEditMode: false
   }),
   getters: {
     groupedLyrics () {

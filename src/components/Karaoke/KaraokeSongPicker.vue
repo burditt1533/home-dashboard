@@ -5,8 +5,16 @@ import { karaoke } from '@/stores/karaoke'
 
 const karaokeStore = karaoke()
 
-const selectSong = (song) => {
-  karaokeStore.set('currentSong', song)
+const selectSong = async (songId) => {
+  let song = await fetch(`http://127.0.0.1:3000/songs/${songId}.json`)
+  song = await song.json()
+  karaokeStore.set('currentSong', {
+    artist: song.artist,
+    name: song.name,
+    tempo: song.tempo,
+    url: song.song_url,
+    json: JSON.parse(song.lyrics)
+  })
   resetKaraoke()
 }
 
@@ -17,8 +25,20 @@ const resetKaraoke = () => {
   karaokeStore.set('countdownNumber', 4)
 }
 
-onMounted(() => {
-  selectSong(KData.songs[1])
+// onMounted(() => {
+//   // selectSong(KData.songs[1])
+// })
+
+onMounted(async () => {
+  // let response = await fetch('http://127.0.0.1:3000/songs.json')
+  // response = await response.json()
+  
+  
+  let response = await fetch('http://127.0.0.1:3000/song_titles.json'); 
+
+  response = await response.json()
+  console.log(response)
+
 })
 </script>
 
@@ -28,7 +48,7 @@ onMounted(() => {
       v-for="song in KData.songs"
       :key="song.name"
       class="song-container"
-      @click="selectSong(song)"
+      @click="selectSong(1)"
     >
       <div v-show="song.name === karaokeStore.currentSong.name" class="note">♫</div>
       <div class="name">{{ song.name }}</div>
