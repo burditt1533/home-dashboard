@@ -7,9 +7,9 @@ import LoginActions from '../components/LoginActions.vue'
 
 const isSidebarOpen = ref(false)
 const navLinks = ref([
-  { label: 'Guest View', icon: 'ri-close-large-line', route: '/guest'},
-  { label: 'Karaoke', icon: 'ri-close-large-line', route: '/karaoke'},
-  { label: 'Clean House', icon: 'ri-close-large-line', route: '/cleanHouse'},
+  { label: 'Guest', icon: 'ri-group-line', route: '/guest'},
+  { label: 'Karaoke', icon: 'ri-mv-line', route: '/karaoke'},
+  { label: 'Clean House', icon: 'ri-home-smile-fill', route: '/cleanHouse'},
 ])
 
 const toggleSidebar = () => {
@@ -32,10 +32,12 @@ onMounted(async () => {})
     <Sidebar
       v-model:visible="isSidebarOpen"
       @show="'updateSideCalendar'"
-      :style="{ width: '30vw' }"
+      :pt="{
+        root: 'sidebar',
+        content: 'sidebar-content'
+      }"
       :showCloseIcon="false"
     >
-      <Login />
       <div class="side-nav-container">
         <template v-for='link in navLinks' :key='link.label'>
           <RouterLink :to="link.route" @click='toggleSidebar' class="side-nav-link">
@@ -44,12 +46,14 @@ onMounted(async () => {})
           </RouterLink>
         </template>
       </div>
+      <Login />
+
     </Sidebar>
     <LoginActions />
   </div>
 </template>
 
-<style scoped lang="scss">
+<style lang="scss">
 .header-container {
   color: $dash-c-white;
   height: 70px;
@@ -72,23 +76,45 @@ onMounted(async () => {})
   }
 }
 
+.sidebar {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 30vw;
+
+  .sidebar-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 10px;
+  }
+}
+
 .side-nav-container {
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
 
   .side-nav-link {
     width: 100%;
-    // padding: 20px;
-    background: $dash-c-white;
+    background: $dash-c-purple;
+    color: white;
+    border-radius: 4px;
     display: flex;
-    align-content: center;
+    align-items: center;
+    flex-direction: column;
 
     .side-nav-icon {
-      padding: 20px;
+      padding: 10px;
     }
 
     .side-nav-label {
-      padding: 20px;
+      text-align: center;
+      padding: 0 0 10px;
+      margin: 0;
+      font-size: 14px;
     }
   }
 }

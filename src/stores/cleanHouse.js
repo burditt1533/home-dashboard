@@ -67,5 +67,32 @@ export const cleanHouse = defineStore('cleanHouse', {
       const percentCompleted = completedLength / (group.length || 1)
       return room.cleanLevel * 20 + (percentCompleted * 20)
     },
+    timeSince (date) {
+      const taskDate = new Date(date)
+      var seconds = Math.floor((new Date() - taskDate) / 1000);
+      var interval = seconds / 31536000;
+      if(!date) return ''
+    
+      if (interval > 1) {
+        return Math.floor(interval) + " years";
+      }
+      interval = seconds / 2592000;
+      if (interval > 1) {
+        return Math.floor(interval) + " months";
+      }
+      interval = seconds / 86400;
+      if (interval > 1) {
+        return Math.floor(interval) + " days";
+      }
+      interval = seconds / 3600;
+      if (interval > 1) {
+        return Math.floor(interval) + " hours";
+      }
+      interval = seconds / 60;
+      if (interval > 1) {
+        return Math.floor(interval) + " minutes";
+      }
+      return Math.floor(seconds) + " seconds";
+    }
   },
 })

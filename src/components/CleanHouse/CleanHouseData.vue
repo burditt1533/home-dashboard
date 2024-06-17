@@ -52,34 +52,6 @@ const updateTaskData = async () => {
   cleanHouseStore.updateLocalTask(response)
 }
 
-const timeSince = (date) => {
-  const taskDate = new Date(date)
-  var seconds = Math.floor((new Date() - taskDate) / 1000);
-  var interval = seconds / 31536000;
-  if(!date) return ''
-
-  if (interval > 1) {
-    return Math.floor(interval) + " years";
-  }
-  interval = seconds / 2592000;
-  if (interval > 1) {
-    return Math.floor(interval) + " months";
-  }
-  interval = seconds / 86400;
-  if (interval > 1) {
-    return Math.floor(interval) + " days";
-  }
-  interval = seconds / 3600;
-  if (interval > 1) {
-    return Math.floor(interval) + " hours";
-  }
-  interval = seconds / 60;
-  if (interval > 1) {
-    return Math.floor(interval) + " minutes";
-  }
-  return Math.floor(seconds) + " seconds";
-}
-
 onMounted(async () => {
   if(!!props.roomId) expandedRows.value[props.roomId] = true
 
@@ -139,8 +111,8 @@ onMounted(async () => {
             </Column>
             <Column header="Date Completed">
                 <template #body="slotProps">
-                  {{ timeSince(slotProps.data.date_completed) }}
-                  {{ !!timeSince(slotProps.data.date_completed) ? 'ago' : '' }}
+                  {{ cleanHouseStore.timeSince(slotProps.data.date_completed) }}
+                  {{ !!cleanHouseStore.timeSince(slotProps.data.date_completed) ? 'ago' : '' }}
                 </template>
             </Column>
             <Column headerStyle="width:4rem">

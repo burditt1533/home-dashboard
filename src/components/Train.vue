@@ -187,5 +187,22 @@ onUnmounted(() => {
       text-align: center;
     }
   }
+
+  @media(max-width: 500px) {
+    padding: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+
+    .train-info {
+      width: 48%;
+      .train-street {
+        font-size: 12px;
+      }
+
+      .time-passed {
+        display: none;
+      }
+    }
+  }
 }
 </style>

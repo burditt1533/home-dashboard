@@ -144,5 +144,15 @@
       height: 340px;
     }
   }
+
+  @media(max-width: 500px) {
+    .temperature-container {
+      font-size: 30px;
+    }
+
+    .weather-content {
+      flex-direction: column;
+    }
+  }
 }
 </style>

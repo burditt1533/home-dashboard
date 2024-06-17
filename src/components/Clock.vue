@@ -91,5 +91,11 @@ const zeroPadding = (num, digit) => {
     font-size: 12px;
     padding: 20px 0 0;
   }
+
+  @media(max-width: 500px) {
+    .time {
+      font-size: 40px;
+    }
+  }
 }
 </style>

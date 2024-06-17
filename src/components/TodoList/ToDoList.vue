@@ -324,5 +324,13 @@ const tasker = computed(() => {
       cursor: pointer;
     }
   }
+
+  @media(max-width: 500px) {
+    flex-direction: column;
+
+    .task-container {
+      width: 100%;
+    }
+  }
 }
 </style>

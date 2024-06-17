@@ -87,5 +87,21 @@ onMounted(async () => {})
       }
     }
   }
+
+  @media(max-width: 500px) {
+    flex-direction: column;
+
+    .wifi-left, .wifi-right {
+      width: 100%;
+    }
+
+    .wifi-header {
+      text-align: center;
+    }
+
+    .wifi-info {
+      justify-content: center;
+    }
+  }
 }
 </style>
