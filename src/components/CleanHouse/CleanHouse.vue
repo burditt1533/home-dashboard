@@ -24,7 +24,7 @@ const toggleMenu = (event, roomId) => {
 
 const toggleCheckbox = async (task) => {
   updatingTaskId.value = task.id
-  let response = await fetch(`http://127.0.0.1:3000/tasks/${ task.id }.json`, {
+  let response = await fetch(`${cleanHouseStore.serverUrl}/tasks/${ task.id }.json`, {
     method: 'PUT', 
     headers: { 
       'Content-type': 'application/json'
@@ -48,7 +48,7 @@ const roomRating = (room) => {
 }
 
 const setRoomGoal = async (room, goalLevel) => {
-  let response = await fetch(`http://127.0.0.1:3000/rooms/${ room.id }.json`, { 
+  let response = await fetch(`${cleanHouseStore.serverUrl}/${ room.id }.json`, { 
     method: 'PUT', 
     headers: { 
       'Content-type': 'application/json'
@@ -71,8 +71,7 @@ const editTasks = (room) => {
 }
 
 onMounted(async () => {
-  let response = await fetch('http://127.0.0.1:3000/rooms')
-  // let response = await fetch('https://home-dashboard-backend.onrender.com/rooms')
+  let response = await fetch(`${cleanHouseStore.serverUrl}/rooms`)
   response = await response.json()
   cleanHouseStore.addRoomsAndTasks(response)
 })
@@ -80,6 +79,21 @@ onMounted(async () => {
 
 <template>
   <div class='clean-house-container'>
+    <div class="clean-house-top">
+      <h2> <i class='ri-home-smile-2-line'></i> Clean House</h2>
+      <div
+        @click='showData'
+        class="house-rating-container"
+      >
+        <div class="house-rating"
+          :style='{
+            backgroundImage: `linear-gradient(to right, #10b981 ${ cleanHouseStore.houseRating }%, transparent 0%)`
+          }'
+        >
+          <span v-for="starIndex in 5" :key="starIndex" class='house-star'>★</span>
+        </div>
+      </div>
+    </div>
     <div class="rooms-container">
       <Card v-for='room in cleanHouseStore.roomGroupedTasks' :key='room.id' :id='room.id' class='room'>
         
@@ -95,13 +109,8 @@ onMounted(async () => {
               aria-controls="overlay_menu"
             />
             <Menu ref="menu" :id="`overlay-${room.id}`" :model="[{
-              label: `Room ${room.id}`,
+              label: `${room.name} - ${room.id}`,
               items: [
-                { label: '★', command: () => { setRoomGoal(room, 1) } },
-                { label: '★★', command: () => { setRoomGoal(room, 2) } },
-                { label: '★★★', command: () => { setRoomGoal(room, 3) } },
-                { label: '★★★★', command: () => { setRoomGoal(room, 4) } },
-                { label: '★★★★★', command: () => { setRoomGoal(room, 5) } },
                 { label: 'Edit Tasks', command: () => { editTasks(room) } },
               ]
             }]" :popup="true" />
@@ -166,18 +175,6 @@ onMounted(async () => {
         </template> -->
       </Card>
     </div>
-    <div
-      @click='showData'
-      class="house-rating-container"
-    >
-      <div class="house-rating"
-        :style='{
-          backgroundImage: `linear-gradient(to right, #10b981 ${ cleanHouseStore.houseRating }%, transparent 0%)`
-        }'
-      >
-        <span v-for="starIndex in 5" :key="starIndex" class='house-star'>★</span>
-      </div>
-    </div>
 
     <Dialog v-model:visible="isEditRoomModalVisible"
       modal
@@ -192,6 +189,11 @@ onMounted(async () => {
 
 <style lang="scss">
 .clean-house-container {
+  .clean-house-top {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 20px;
+  }
   .rooms-container {
     overflow-x: scroll;
     display: flex;
@@ -336,6 +338,14 @@ onMounted(async () => {
         -webkit-text-stroke: 1px #10b981;
         color: transparent;
         font-size: 40px;
+      }
+    }
+
+    @media(max-width: 500px) {
+      .house-rating {
+        .house-star {
+          font-size: 25px;
+        }
       }
     }
   }

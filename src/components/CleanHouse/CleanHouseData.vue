@@ -33,7 +33,7 @@ const tableData = computed(() => {
 })
 
 const updateTaskData = async () => {
-  let response = await fetch(`http://127.0.0.1:3000/tasks/${ taskEditing.value.id }.json`, { 
+  let response = await fetch(`${cleanHouseStore.serverUrl}/tasks/${ taskEditing.value.id }.json`, { 
     method: 'PUT', 
     headers: { 
       'Content-type': 'application/json'
@@ -55,7 +55,7 @@ const updateTaskData = async () => {
 onMounted(async () => {
   if(!!props.roomId) expandedRows.value[props.roomId] = true
 
-  let response = await fetch('http://127.0.0.1:3000/rooms')
+  let response = await fetch(`${cleanHouseStore.serverUrl}/rooms`)
   response = await response.json()
   cleanHouseStore.addRoomsAndTasks(response)
 })

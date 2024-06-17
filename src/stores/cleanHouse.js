@@ -4,9 +4,13 @@ import { defineStore } from 'pinia'
 export const cleanHouse = defineStore('cleanHouse', {
   state: () => ({
     rooms: [],
-    tasks: []
+    tasks: [],
+    isLocal: false
   }),
   getters: {
+    serverUrl () {
+      return this.isLocal ? 'http://127.0.0.1:3000' : 'https://home-dashboard-backend.onrender.com'
+    },
     roomsWithTasks () {
       return this.rooms.map((room) => {
         room.tasks = this.tasks.filter(task => task.room_id === room.id)
