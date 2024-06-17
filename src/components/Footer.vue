@@ -7,7 +7,7 @@ const buttons = ref([
   { label: 'Todo', icon: 'ri-todo-line', route: 'todo' },
   { label: '', icon: 'ri-home-line home', route: '/' },
   { label: 'Photos', icon: 'ri-camera-line', route: 'photos' },
-  { label: 'Media', icon: 'ri-camera-line', route: 'media' }
+  { label: 'Clean House', icon: 'ri-home-smile-2-line', route: 'cleanHouse' }
 ])
 
 onMounted(async () => {})
@@ -32,11 +32,10 @@ onMounted(async () => {})
 <style scoped lang="scss">
 .footer-container {
   color: $dash-c-blue;
-  height: 100px;
   width: 100%;
-  z-index: 100;
-  position: fixed;
-  bottom: 0;
+  height: 17vw;
+  width: 100%;
+  max-height: 100px;
 
   .buttons-container {
     width: 100%;
@@ -73,6 +72,14 @@ onMounted(async () => {})
         background: $dash-c-blue;
         color: $dash-c-white;
       }
+    }
+  }
+
+  @media(max-width: 500px) {
+    font-size: 11px;
+
+    .footer-icons {
+      font-size: 20px;
     }
   }
 }

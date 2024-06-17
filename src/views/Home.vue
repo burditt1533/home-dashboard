@@ -56,7 +56,7 @@ import WifiCode from '../components/WifiCode.vue'
   gap: $dash-c-home-gap;
   width: 100vw;
   padding: $dash-c-home-gap $dash-c-home-gap 100px;
-  overflow: hidden;
+  overflow-x: hidden;
 
   .dash-section {
     // margin: 0 20px;

@@ -7,6 +7,7 @@ import Media from '../views/Media.vue'
 import Guest from '../views/Guest.vue'
 import Karaoke from '@/components/Karaoke/Karaoke.vue'
 import CleanHouse from '@/components/CleanHouse/CleanHouse.vue'
+import CleanHouseData from '@/components/CleanHouse/CleanHouseData.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -50,6 +51,11 @@ const router = createRouter({
       path: '/cleanHouse',
       name: 'cleanHouse',
       component: CleanHouse
+    },
+    {
+      path: '/cleanHouseData',
+      name: 'cleanHouseData',
+      component: CleanHouseData
     }
   ]
 })

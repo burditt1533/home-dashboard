@@ -3,6 +3,7 @@ import { defineStore } from 'pinia'
 
 export const karaoke = defineStore('karaoke', {
   state: () => ({
+    songs: [],
     musicPlayer: {},
     currentSong: {},
     isSingleLyricLine: false,

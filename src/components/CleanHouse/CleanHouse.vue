@@ -1,16 +1,21 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import router from '@/router'
 import Button from 'primevue/button'
 import Card from 'primevue/card'
 import Checkbox from 'primevue/checkbox';
 import Rating from 'primevue/rating';
+import Dialog from 'primevue/dialog';
 import Menu from 'primevue/menu';
+import CleanHouseData from './CleanHouseData.vue';
 import { cleanHouse } from '@/stores/cleanHouse'
 import { storeToRefs } from "pinia";
 
 const cleanHouseStore = cleanHouse()
 const updatingTaskId = ref(null)
 const menu = ref();
+const isEditRoomModalVisible = ref(false);
+const editingRoom = ref(null)
 
 const toggleMenu = (event, roomId) => {
   const element = menu.value.find(thing => thing.id === `overlay-${roomId}`)
@@ -19,7 +24,7 @@ const toggleMenu = (event, roomId) => {
 
 const toggleCheckbox = async (task) => {
   updatingTaskId.value = task.id
-  let response = await fetch(`http://127.0.0.1:3000/tasks/${ task.id }.json`, { 
+  let response = await fetch(`http://127.0.0.1:3000/tasks/${ task.id }.json`, {
     method: 'PUT', 
     headers: { 
       'Content-type': 'application/json'
@@ -84,8 +89,18 @@ const timeSince = (date) => {
   return Math.floor(seconds) + " seconds";
 }
 
+const showData = () => {
+  router.push('/cleanHouseData')
+}
+
+const editTasks = (room) => {
+  editingRoom.value = room
+  isEditRoomModalVisible.value = true;
+}
+
 onMounted(async () => {
   let response = await fetch('http://127.0.0.1:3000/rooms')
+  // let response = await fetch('https://home-dashboard-backend.onrender.com/rooms')
   response = await response.json()
   cleanHouseStore.addRoomsAndTasks(response)
 })
@@ -114,7 +129,8 @@ onMounted(async () => {
                 { label: '★★', command: () => { setRoomGoal(room, 2) } },
                 { label: '★★★', command: () => { setRoomGoal(room, 3) } },
                 { label: '★★★★', command: () => { setRoomGoal(room, 4) } },
-                { label: '★★★★★', command: () => { setRoomGoal(room, 5) } }
+                { label: '★★★★★', command: () => { setRoomGoal(room, 5) } },
+                { label: 'Edit Tasks', command: () => { editTasks(room) } },
               ]
             }]" :popup="true" />
           </div>
@@ -177,8 +193,8 @@ onMounted(async () => {
       </Card>
     </div>
     <div
+      @click='showData'
       class="house-rating-container"
-
     >
       <div class="house-rating"
         :style='{
@@ -188,6 +204,15 @@ onMounted(async () => {
         <span v-for="starIndex in 5" :key="starIndex" class='house-star'>★</span>
       </div>
     </div>
+
+    <Dialog v-model:visible="isEditRoomModalVisible"
+      modal
+      dismissableMask
+      :header="`Edit ${editingRoom?.name}`"
+      :style="{ width: '75vw' }"
+    >
+      <CleanHouseData :roomId='editingRoom?.id'/>
+    </Dialog>
   </div>
 </template>
 
@@ -202,6 +227,11 @@ onMounted(async () => {
       min-width: 25rem;
       overflow: hidden;
       position: relative;
+
+      @media(max-width: 500px) {
+        min-width: 100vw;
+        border-radius: 0;
+      }
 
       .menu-container {
         position: absolute;

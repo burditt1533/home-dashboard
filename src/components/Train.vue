@@ -152,7 +152,7 @@ onUnmounted(() => {
 
 .train-container {
   width: 100%;
-  min-height: 108px;
+  // min-height: 108px;
   display: flex;
   background: $dash-c-card-bg;
   padding: 20px;
