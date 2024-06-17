@@ -39,7 +39,7 @@
       <!-- {{ weather.current }} -->
       <div class="left-side">
         <div class="icon-container">
-          <img :src="weatherCodeData.day.image" />
+          <img :src="weatherCodeData.day.image" class='weather-image' />
 
           <!-- <i class="ri-sun-line"></i> -->
         </div>
@@ -148,10 +148,23 @@
   @media(max-width: 500px) {
     .temperature-container {
       font-size: 30px;
+      margin: 0;
+    }
+
+    .stats-container {
+      display: none;
     }
 
     .weather-content {
       flex-direction: column;
+
+      .weather-image {
+        width: 40px;
+      }
+      .right-side {
+        margin: 0;
+        padding: 0;
+      }
     }
   }
 }

@@ -74,6 +74,15 @@ onMounted(async () => {})
     font-size: 40px;
     // padding: 20px;
   }
+
+  @media(max-width: 500px) {
+    height: 40px;
+    width: 40px;
+
+    .menu-button {
+      font-size: 25px;
+    }
+  }
 }
 
 .sidebar {

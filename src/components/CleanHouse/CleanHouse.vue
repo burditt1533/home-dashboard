@@ -30,7 +30,7 @@ const toggleCheckbox = async (task) => {
       'Content-type': 'application/json'
     }, 
     body: JSON.stringify({
-      date_completed: !task.is_complete ? new Date().toISOString() : null,
+      date_completed: !task.is_complete ? new Date().toISOString() : task.date_completed,
       is_complete: !task.is_complete,
     }) 
   }); 
@@ -80,7 +80,7 @@ onMounted(async () => {
 <template>
   <div class='clean-house-container'>
     <div class="clean-house-top">
-      <h2> <i class='ri-home-smile-2-line'></i> Clean House</h2>
+      <h2 class='clean-house-header'> <i class='ri-home-smile-2-line'></i> Clean House</h2>
       <div
         @click='showData'
         class="house-rating-container"
@@ -193,6 +193,13 @@ onMounted(async () => {
     text-align: center;
     margin-bottom: 20px;
     font-size: 20px;
+
+    @media(max-width: 500px) {
+      .clean-house-header {
+        margin-bottom: 5px;
+      }
+    }
+
   }
   .rooms-container {
     overflow-x: scroll;
@@ -320,6 +327,24 @@ onMounted(async () => {
         }
       }
     }
+
+    @media(max-width: 500px) {
+      .p-card-body {
+        padding: 1rem;
+      }
+      .p-card-caption {
+        flex-direction: row;
+      }
+      .room {
+        .room-image {
+          height: 160px;
+        }
+
+        .room-checklist {
+          height: 280px;
+        }
+      }
+    }
   }
 
   .house-rating-container {
@@ -344,7 +369,7 @@ onMounted(async () => {
     @media(max-width: 500px) {
       .house-rating {
         .house-star {
-          font-size: 25px;
+          font-size: 20px;
         }
       }
     }

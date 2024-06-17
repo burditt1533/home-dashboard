@@ -66,9 +66,6 @@ const zeroPadding = (num, digit) => {
   text-align: center;
   left: 50%;
   top: 50%;
-  // text-shadow:
-  //   0 0 20px rgba(10, 175, 230, 1),
-  //   0 0 20px rgba(10, 175, 230, 0);
   padding-top: 40px;
 
   p {
@@ -95,6 +92,10 @@ const zeroPadding = (num, digit) => {
   @media(max-width: 500px) {
     .time {
       font-size: 40px;
+    }
+
+    .date {
+      font-size: 16px;
     }
   }
 }
